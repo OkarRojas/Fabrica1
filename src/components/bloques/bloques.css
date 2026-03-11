@@ -1,0 +1,65 @@
+.bloques{
+    background-image: url("C:\\Users\\oscar\\OneDrive\\Documentos\\Fabrica\\ROZVI\\src\\assets\\Fondo2.jpg");
+    background-size: cover;
+    width: 100%;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+
+}
+
+.bloque1{    
+    display: flex;
+    padding-left: 3rem;
+    width: 50%;
+    height: 20rem;
+    border-radius: 100px;
+    justify-content: left;
+    align-items: left;
+    width: 80%;
+    background-color: rgba(0, 0, 0, 0.405);
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);  /* Safari/Chrome */
+}
+.bloque1 h3{
+    color: white;
+    font-size: 3rem;
+    font-weight: bold;
+}
+.bloque1 p{
+    margin-right: 5rem;
+}
+.bloque1 img{
+    border-radius: 10%;
+
+}
+
+.bloque2{
+    margin-top: 5%;
+    color: black;
+    height: 20rem;
+    border-radius: 10%;
+    justify-content: right;
+    align-items: right;
+    text-align: right;
+    background-color: rgba(233, 181, 108, 0.301);
+    padding-right: 3rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);  /* Safari/Chrome */
+    display: flex;
+    margin-left: 20%;    
+}
+
+.bloque2 img{
+    border-radius: 10%;
+}
+
+.bloque2 h3{
+    color: rgb(0, 0, 0);
+    font-size: 3rem;
+    font-weight: bold;
+    padding-top: 2rem;
+}
+.bloque2 p{
+    margin-left: 5rem;
+}

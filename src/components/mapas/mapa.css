@@ -1,0 +1,31 @@
+.mapa{
+    width: 100%;
+    background-image: url("C:\\Users\\oscar\\OneDrive\\Documentos\\Fabrica\\ROZVI\\src\\assets\\Fondo3.jpg");
+    background-size: cover;
+    padding: 3rem 0 3rem 0;
+}
+h2{
+    width: 50%;
+    margin-left: 2rem;
+    color: rgb(255, 255, 255);
+    font-size: 2rem;
+    font-weight: bold;
+    background-color: rgba(16, 15, 14, 0.301);
+    margin-bottom: 2rem;
+    padding-left: 1rem;
+    border-radius: 10px;
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);  /* Safari/Chrome */
+
+}
+.mapa iframe{
+    padding-left: 2rem;
+}
+.rectangulo{
+    
+    background-color: black;
+    padding: 2rem;
+    margin-left: 2rem;
+    margin-right: 5rem;
+}
