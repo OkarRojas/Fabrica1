@@ -38,7 +38,7 @@
     margin-top: 5%;
     color: black;
     height: 20rem;
-    border-radius: 10%;
+    border-radius: 100px;
     justify-content: right;
     align-items: right;
     text-align: right;
@@ -47,7 +47,7 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);  /* Safari/Chrome */
     display: flex;
-    margin-left: 20%;    
+    margin-left: 30%;    
 }
 
 .bloque2 img{
