@@ -1,6 +1,6 @@
 .mapa{
     width: 100%;
-    background-image: url("C:\\Users\\oscar\\OneDrive\\Documentos\\Fabrica\\ROZVI\\src\\assets\\Fondo3.jpg");
+    background-image: url("../../assets/Fondo3.jpg");
     background-size: cover;
     padding: 3rem 0 3rem 0;
 }

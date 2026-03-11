@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Cursive:wght@400..700&display=swap');
 
 .header {
-    background-image: url("C:\\Users\\oscar\\OneDrive\\Documentos\\Fabrica\\ROZVI\\src\\assets\\Fondo1.jpg");
+    background-image: url("../../assets/Fondo1.jpg");
     background-size: cover;
     padding-bottom: 10rem;
 }
