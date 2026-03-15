@@ -1,0 +1,101 @@
+/* Contenedor malla - evita solapamientos */
+.product-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem; /* Más espacio entre tarjetas */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* Tarjeta con overflow hidden */
+.product-card {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  overflow: hidden; /* <- Clave: oculta elementos salientes */
+  height: 440px; /* Ligeramente más alta */
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.product-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.2);
+}
+
+/* Imagen */
+.product-card img {
+  width: 100%;
+  height: 220px; /* Más alta */
+  object-fit: cover;
+}
+
+/* Contenido */
+.product-card-content {
+  padding: 1.75rem;
+  text-align: center;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Texto optimizado */
+.product-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.product-card .volumen {
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.product-card .precio {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f97316;
+  margin: 0;
+}
+
+/* Botón DENTRO de la tarjeta - sin solapamiento */
+.add-button {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 8px 24px rgba(59,130,246,0.4);
+  opacity: 0;
+  transform: translateX(-50%) translateY(12px) scale(0.95);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
+}
+
+.product-card:hover .add-button {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* Scrollbar */
+.product-grid-container::-webkit-scrollbar {
+  width: 8px;
+}
+.product-grid-container::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+.product-grid-container::-webkit-scrollbar-thumb { 
+  background: linear-gradient(#3b82f6, #1d4ed8); 
+  border-radius: 4px; 
+}

@@ -6,6 +6,8 @@ import Mapa from './components/mapas/mapa.jsx'
 import Footer from './components/footer/footer.jsx'
 import Productos from './components/producctos/productos.jsx'
 import { Route, Routes } from 'react-router-dom'
+import Malla from './components/malla/malla.jsx'
+import Carrito from './components/carrito/carrito.jsx'
 
 function App() {
   return (
@@ -28,7 +30,13 @@ function App() {
           path="/productos"
           element={
             <>
+              <Head />
+              <Carrito />
               <Productos />
+              
+              <Malla />
+              
+
             </>
           }
         />
