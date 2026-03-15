@@ -1,5 +1,6 @@
 import React from "react";
 import "./head.css";
+import { Link } from 'react-router-dom';
 
 const Head = () => {
   return (
@@ -8,11 +9,10 @@ const Head = () => {
         <h1 className="head-title">ROZVI</h1>
 
         <div className="rectangle">
-            <a href="#" className="rectangle-link">Inicio</a>
-            <a href="#" className="rectangle-link">Productos</a>
-            <a href="#" className="rectangle-link">Contacto</a>
-            <a href="#" className="rectangle-link">Puntos de Venta</a>
-            
+            <Link to="/" className="rectangle-link">Inicio</Link>
+            <Link to="/productos" className="rectangle-link">Productos</Link>
+            <Link to="/contacto" className="rectangle-link">Contacto</Link>
+            <Link to="/puntos-de-venta" className="rectangle-link">Puntos de Venta</Link>
         </div>
         </div>
     </header>

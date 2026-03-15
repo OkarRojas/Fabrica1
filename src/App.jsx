@@ -4,15 +4,55 @@ import Header from './components/header/header.jsx'
 import Bloques from './components/bloques/bloques.jsx'
 import Mapa from './components/mapas/mapa.jsx'
 import Footer from './components/footer/footer.jsx'
+import Productos from './components/producctos/productos.jsx'
+import { Route, Routes } from 'react-router-dom'
 
 function App() {
   return (
     <>
-    <Head />
-    <Header />
-    <Bloques />
-    <Mapa />
-    <Footer />
+      
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <Head />
+              <Header />
+              <Bloques />
+              <Mapa />
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/productos"
+          element={
+            <>
+              <Productos />
+            </>
+          }
+        />
+        <Route
+          path="/puntos-de-venta"
+          element={
+            <>
+              <Header />
+              <Mapa />
+            </>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <>
+              <Header />
+              <Bloques />
+              <Mapa />
+            </>
+          }
+        />
+      </Routes>
+      
     </>
   )
 }
