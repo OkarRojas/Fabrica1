@@ -12,7 +12,6 @@ const Head = () => {
             <Link to="/" className="rectangle-link">Inicio</Link>
             <Link to="/productos" className="rectangle-link">Productos</Link>
             <Link to="/contacto" className="rectangle-link">Contacto</Link>
-            <Link to="/puntos-de-venta" className="rectangle-link">Puntos de Venta</Link>
         </div>
         </div>
     </header>

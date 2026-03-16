@@ -11,7 +11,23 @@
 .h1-carrito{
     width: 100%;
     color: rgb(255, 255, 255);
-    font-size: 1.5rem;
-    font-weight: bold;
+    font-size: 2rem;
     margin-left: 0%;
+}
+
+.productos{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: blue;
+    height: 55vh;
+}
+
+.carrito p{
+    color: rgb(255, 255, 255);
+    margin-top: 2rem;
+    width: 100%;
+    margin-left:0%;
+    font-size: 2rem;
 }

@@ -3,7 +3,11 @@ import "./carrito.css";
 const Carrito = () => {
     return (
         <div className="carrito">
-            <h2 className="h1-carrito">Tu carrito</h2>
+            <p className="h1-carrito">Tu carrito</p>
+            <div className="productos"> xy</div>
+            <div className="total">
+                <p>Total: 99999</p>
+            </div>
         </div>
     );
 }

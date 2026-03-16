@@ -7,7 +7,9 @@ import Footer from './components/footer/footer.jsx'
 import Productos from './components/producctos/productos.jsx'
 import { Route, Routes } from 'react-router-dom'
 import Malla from './components/malla/malla.jsx'
+import Chat from './components/chat/chat.jsx'
 import Carrito from './components/carrito/carrito.jsx'
+import ContactForm from './components/form/contactform.jsx'
 
 function App() {
   return (
@@ -32,6 +34,7 @@ function App() {
             <>
               <Head />
               <Carrito />
+              
               <Productos />
               
               <Malla />
@@ -41,24 +44,17 @@ function App() {
           }
         />
         <Route
-          path="/puntos-de-venta"
+          path="/contacto"
           element={
             <>
-              <Header />
-              <Mapa />
+              <Head />
+              <ContactForm />
+              
             </>
           }
-        />
-        <Route
-          path="*"
-          element={
-            <>
-              <Header />
-              <Bloques />
-              <Mapa />
-            </>
-          }
-        />
+        />  
+               
+        
       </Routes>
       
     </>
