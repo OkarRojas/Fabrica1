@@ -1,11 +1,11 @@
 .carrito{
     width: 25%;
+    top: 10%;
+    left: 75%;
     height: 100%;
-    margin-left: 75%;
     background-color: black;
     position: fixed;
     z-index: 999;
-    margin-top: 4.5rem;
 }
 
 .h1-carrito{

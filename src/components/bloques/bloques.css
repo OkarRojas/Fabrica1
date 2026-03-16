@@ -17,7 +17,7 @@
     align-items: left;
     width: 80%;
     background-color: rgba(0, 0, 0, 0.405);
-
+    color: white;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);  /* Safari/Chrome */
 }
@@ -36,7 +36,7 @@
 
 .bloque2{
     margin-top: 5%;
-    color: black;
+    color: rgb(0, 0, 0);
     height: 20rem;
     border-radius: 100px;
     justify-content: right;

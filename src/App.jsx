@@ -49,6 +49,7 @@ function App() {
             <>
               <Head />
               <ContactForm />
+              <Footer />
               
             </>
           }

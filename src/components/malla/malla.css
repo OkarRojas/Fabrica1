@@ -1,10 +1,10 @@
 /* Contenedor malla - evita solapamientos */
 .product-grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, minmax(300px, 1fr));
   gap: 2rem; /* Más espacio entre tarjetas */
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 75%;
+  margin: 0 ;
   padding: 1.5rem;
 }
 
