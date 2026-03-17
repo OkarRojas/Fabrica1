@@ -1,24 +1,57 @@
 import React from "react";
 import "./mapa.css";
+import pan1 from "../../assets/pam.jpg";
+import pan2 from "../../assets/pan2.jpg";
 
 const Mapa = () => {
-    return (
-        <div className="mapa">
-            <h2>Encuentra nuestros productos en los siguientes puntos de venta:</h2>
-            <div className="columnas">
-            <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d5627.758397889848!2d-73.61512371282441!3d4.13627124664569!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e3e2f63527e536d%3A0xb1ba03049f3adc18!2sPAN%20DE%20ARROZ%20ROZVI%20-Rozquetas%20Villavicencio!5e0!3m2!1ses-419!2sco!4v1772495762604!5m2!1ses-419!2sco" width="750" height="450" style={{border: 0}} allowFullScreen={true} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
-            />
+  return (
+    <div>
+      <section className="puntos-section">
+        <div className="puntos-container">
+          {/* Título */}
+          <div className="puntos-header">
+            <h2 className="puntos-titulo">Encuentra ROZVI</h2>
+            <p className="puntos-subtitulo">
+              Nuestros productos en los siguientes puntos de venta de la ciudad
+            </p>
+          </div>
 
-            <div className="rectangulo">
-                <h3>Punto de venta Rozvi</h3>
-                <p>Dirección: Calle 40 # 35-20, Villavicencio, Meta</p>
-                <h3>Galeria del 7 De agosto</h3>
-                <p>Dirección: Calle 40 # 35-20, Villavicencio, Meta</p>
+          {/* Grid principal */}
+          <div className="puntos-grid">
+            
+            {/* Mapa */}
+            <div className="puntos-mapa-col">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=TU_MAPA_AQUI" 
+                className="puntos-mapa"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+             
             </div>
+
+            {/* Productos + Dirección */}
+            <div className="puntos-derecha-col">
+              
+              {/* Preview productos */}
+              <div className="puntos-productos-grid">
+                <img src={pan1} className="puntos-producto" alt="Pan 1" />
+                <img src={pan2} className="puntos-producto" alt="Pan 2" />
+              </div>
+
+              {/* Tarjeta dirección */}
+              <div className="puntos-direccion-card">
+                <h3 className="puntos-direccion-titulo">Nuestro Local</h3>
+                <p className="puntos-direccion-texto">Centro Comercial Arboletes</p>
+                <p className="puntos-direccion-detalle">Carrera 12#21-06, Villavicencio</p>
+              </div>
+              
             </div>
+          </div>
         </div>
-    );
-}
+      </section>
+    </div>
+  );
+};
 
 export default Mapa;

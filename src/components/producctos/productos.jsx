@@ -3,8 +3,9 @@ import "./productos.css";
 
 const Productos = () => {
     return (
-        <div>
-            <h1 className="h1-productos">Dale un vistazo a nuestros productos:</h1>
+        <div className="productos-hero">
+            <h1>Nuestros Productos</h1>
+            <p>Horneados cada día con ingredientes 100% naturales 🍞</p>
         </div>
     );
 }

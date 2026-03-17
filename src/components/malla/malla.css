@@ -1,88 +1,216 @@
-/* Contenedor malla - evita solapamientos */
-.product-grid-container {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(300px, 1fr));
-  gap: 2rem; /* Más espacio entre tarjetas */
-  max-width: 75%;
-  margin: 0 ;
-  padding: 1.5rem;
-}
-
-/* Tarjeta con overflow hidden */
-.product-card {
+/* ── Contenedor principal ── */
+.malla-container {
+  width: 100%;
+  min-height: 70vh;
+  background: linear-gradient(135deg, #fefce8 0%, #fef9e6 50%, #fef3c7 100%);
+  padding: 2rem 2rem;
   position: relative;
+  overflow: hidden;
+}
+
+.malla-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(234,179,8,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* ── Grid Bento ── */
+.product-grid-container {
+  columns: 3;
+  column-gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+
+/* ── Tarjeta base ── */
+.product-card {
+  width: 100%;
+  position: relative;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 2.5rem;
+  overflow: hidden;
+  height: 440px;
+  box-shadow:
+    0 35px 70px -20px rgba(0, 0, 0, 0.2),
+    0 15px 30px -10px rgba(234, 179, 8, 0.15),
+    inset 0 2px 8px rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor: pointer;
+}
+
+/* ── Card central DESTACADA (2da, 5ta...) ── */
+.product-card:nth-child(3n+2) {
+  height: 500px; /* ← más alta */
+  transform: scale(1.05);
+  background: linear-gradient(145deg, #f5c842 0%, #e6a800 100%);
+  box-shadow:
+    0 50px 100px -20px rgba(234, 179, 8, 0.5),
+    0 25px 50px -15px rgba(0, 0, 0, 0.2),
+    inset 0 2px 8px rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  z-index: 3;
+}
+
+/* Textos blancos en card destacada */
+.product-card:nth-child(3n+2) h3 {
+  color: white !important;
+}
+
+.product-card:nth-child(3n+2) .volumen {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.product-card:nth-child(3n+2) .precio {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: white !important;
+}
+
+/* Botón en card destacada */
+.product-card:nth-child(3n+2) .add-button {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-  overflow: hidden; /* <- Clave: oculta elementos salientes */
-  height: 440px; /* Ligeramente más alta */
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255,255,255,0.2);
+  color: #d97706;
+  box-shadow: 0 15px 30px -8px rgba(0, 0, 0, 0.2);
 }
 
+.product-card:nth-child(3n+2) .add-button:hover {
+  background: #fff8e0;
+}
+
+/* ── Hover en card normal ── */
 .product-card:hover {
-  transform: translateY(-12px);
-  box-shadow: 0 20px 48px rgba(0,0,0,0.2);
+  transform: translateY(-16px) scale(1.03);
+  box-shadow:
+    0 75px 150px -30px rgba(0, 0, 0, 0.3),
+    0 35px 70px -20px rgba(234, 179, 8, 0.25),
+    inset 0 2px 8px rgba(255, 255, 255, 0.9);
+  border-color: rgba(234, 179, 8, 0.4);
 }
 
-/* Imagen */
+/* Hover en card destacada */
+.product-card:nth-child(3n+2):hover {
+  transform: scale(1.08) translateY(-8px);
+}
+
+/* ── Brillo hover ── */
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  transition: left 0.7s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.product-card:hover::before {
+  left: 150%;
+}
+
+/* ── Imagen ── */
 .product-card img {
   width: 100%;
-  height: 220px; /* Más alta */
+  height: 240px;
   object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Contenido */
+.product-card:nth-child(3n+2) img {
+  height: 270px; /* ← imagen más grande en destacada */
+}
+
+.product-card:hover img {
+  transform: scale(1.08);
+}
+
+/* ── Contenido ── */
 .product-card-content {
-  padding: 1.75rem;
-  text-align: center;
-  height: 220px;
+  padding: 1.25rem 1.75rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+.product-card-info {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.4rem;
+  flex: 1;
 }
 
-/* Texto optimizado */
 .product-card h3 {
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 800;
   color: #111827;
   margin: 0;
   line-height: 1.3;
+  transition: color 0.3s ease;
+}
+
+.product-card:hover h3 {
+  color: #92400e;
 }
 
 .product-card .volumen {
   color: #6b7280;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: rgba(234, 179, 8, 0.1);
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
   margin: 0;
 }
 
 .product-card .precio {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #f97316;
+  font-size: 1.75rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   margin: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* Botón DENTRO de la tarjeta - sin solapamiento */
+/* ── Botón ── */
 .add-button {
   position: absolute;
-  bottom: 1rem;
+  bottom: 1.5rem;
   left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  transform: translateX(-50%) translateY(12px) scale(0.95);
+  background: linear-gradient(135deg, #eab308 0%, #d97706 100%);
   color: white;
   border: none;
-  padding: 0.875rem 2.5rem;
+  padding: 1rem 2.75rem;
   border-radius: 50px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1rem;
-  box-shadow: 0 8px 24px rgba(59,130,246,0.4);
+  box-shadow:
+    0 15px 30px -8px rgba(234, 179, 8, 0.5),
+    0 8px 16px -5px rgba(0, 0, 0, 0.15);
   opacity: 0;
-  transform: translateX(-50%) translateY(12px) scale(0.95);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 10;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .product-card:hover .add-button {
@@ -90,12 +218,26 @@
   transform: translateX(-50%) translateY(0) scale(1);
 }
 
-/* Scrollbar */
-.product-grid-container::-webkit-scrollbar {
-  width: 8px;
+.add-button:hover {
+  box-shadow:
+    0 25px 50px -12px rgba(234, 179, 8, 0.7),
+    0 12px 24px -8px rgba(0, 0, 0, 0.25);
+  transform: translateX(-50%) translateY(-3px) scale(1.05) !important;
 }
-.product-grid-container::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
-.product-grid-container::-webkit-scrollbar-thumb { 
-  background: linear-gradient(#3b82f6, #1d4ed8); 
-  border-radius: 4px; 
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .product-grid-container {
+    columns: 2;
+    column-gap: 1.2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .product-grid-container {
+    columns: 1;
+  }
+  .product-card {
+    height: auto; /* ← importante en móvil */
+  }
 }

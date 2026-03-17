@@ -10,11 +10,14 @@ import Malla from './components/malla/malla.jsx'
 import Chat from './components/chat/chat.jsx'
 import Carrito from './components/carrito/carrito.jsx'
 import ContactForm from './components/form/contactform.jsx'
+import { CarritoProvider } from './components/context/CarritoContext.jsx'
+import ChatBot from './components/chatbot/chatbot.jsx'
 
 function App() {
   return (
     <>
-      
+      <ChatBot />
+
       <Routes>
         <Route
           path="/"
@@ -32,12 +35,12 @@ function App() {
           path="/productos"
           element={
             <>
+              <CarritoProvider>
               <Head />
-              <Carrito />
-              
               <Productos />
-              
               <Malla />
+              <Carrito />
+              </CarritoProvider>
               
 
             </>

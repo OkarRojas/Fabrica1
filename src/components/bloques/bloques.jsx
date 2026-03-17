@@ -1,25 +1,50 @@
 import React from "react";
 import "./bloques.css";
-import pan1 from "../../assets/pan1.jpg";
-import pan2 from "../../assets/pan2.jpg";
+import pan1 from "../../assets/pam.jpg";
 
 const Bloques = () => {
 return (
-    <div className="bloques">
-        <div className="bloque1">
-            <div className="contenido1">
-                <h3>Quienes somos</h3>
-                <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Culpa inventore aperiam ipsum! Voluptatum corporis repellat sunt, quaerat iusto non alias! Delectus neque consequuntur autem similique quae inventore voluptate sapiente adipisci.</p>
-            </div>
-            <img src={pan1} alt="pan1" />
+    <div>
+        <section className="bloques-section">
+  <div className="bloques-grid">
+    <div className="bloques-left-col">
+      <h2 className="bloques-titulo">
+        ROZVI
+      </h2>
+      <p className="bloques-subtitulo">
+        Panadería familiar que amasa con amor desde 1990. Lorem ipsum dolor sit amet consectetur, adipisicing elit. Amet beatae consequuntur laboriosam? Placeat doloremque fuga illo animi quisquam quo odio
+      </p>
+      <a href="#" className="bloques-cta">
+        Conócenos
+      </a>
+    </div>
+    
+    <div className="bloques-img-col">
+      <img src={pan1}
+           className="bloques-img"
+           alt="Pan ROZVI" />
+    </div>
+    
+    <div className="bloques-right-col">
+      <h3 className="bloques-features-title">¿Por qué ROZVI?</h3>
+      <div className="bloques-features-list">
+        <div className="bloques-feature-item">
+          <div className="bloques-feature-icon">✓</div>
+          <div>Ingredientes 100% naturales</div>
         </div>
-        <div className="bloque2">
-            <img src={pan2} alt="pan2" />
-            <div className="contenido2">
-                <h3>Por que nosotros?</h3>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, voluptatum. Quisquam, voluptatum.</p>
-            </div>
+        <div className="bloques-feature-item">
+          <div className="bloques-feature-icon">✓</div>
+          <div>Horneado fresco diario</div>
         </div>
+        <div className="bloques-feature-item">
+          <div className="bloques-feature-icon">✓</div>
+          <div>Entrega en 2 horas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
     </div>
 );
 }

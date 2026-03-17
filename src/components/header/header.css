@@ -1,33 +1,40 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Cursive:wght@400..700&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+
+
+:root {
+--primary-gold:     #F5C518 ; /* Amarillo brillante del logo */
+--primary-orange:   #E68A00;  /* Naranja del degradado */
+--dark-bg:          #1A1A1A;  /* Negro del logo */
+--warm-bg:          #F8F4EE ; /* Beige cálido para fondos */
+--text-dark:        #111111 ; /* Texto principal */
+--text-muted:       #666666  ;/* Texto secundario */
+}
+
 .header {
-    background-image: url("../../assets/Fondo1.jpg");
+    background-image: url("../../assets/Fondo5.png");
     background-size: cover;
     padding-bottom: 10rem;
 }
 
-.logo{
-    width: 25rem;
-    margin-top: 10%;
-    margin-left: 10rem;
-}
-
 .header-content {
-    display: flex;
+    width: 100%;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin-top: 3%;
-    margin-right: 10%;
+    display: flex;
+    padding-top: 10%;
 }
 
 button {
-    margin-top: 2rem;
+    margin-top: 5rem;
     padding: 0.8rem 1.5rem;
     font-size: 1.2rem;
     font-weight: bold;
-    color: #000000;
+    color: #705858;
     background-color: rgb(253, 251, 251);
     border: none;
     border-radius: 8px;
@@ -36,9 +43,21 @@ button {
 }
 
 .header-title {
-    width: 100%;
-    font-size: 4rem;
-    margin-top: 5%;
-    color: rgba(239, 181, 69);    
+    font-size: 3rem;
+    margin: 0;
+    color:rgb(249, 233, 180);    
+    text-align: center;
+
 }
 
+.rozvi{    
+    font-family: 'Playfair Display', serif;
+    font-size: 7rem;
+    letter-spacing: -0.02em;
+    color: var(--warm-bg);
+    margin: 0;
+}
+
+.shadow-yellow-xl {
+  box-shadow: 0 35px 60px -15px rgba(245, 197, 24, 0.4);
+}

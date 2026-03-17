@@ -1,12 +1,19 @@
-body{
-    background-color: #ffffff;
+.productos-hero {
+  text-align: center;
+  padding: 3rem 2rem 2rem;
+  background: linear-gradient(135deg, #fff8e7, #fdefc3);
+  border-radius: 1.5rem;
+  width: 100%;
+  padding-top: 10%;
 }
 
-.h1-productos{
-    color: rgb(0, 0, 0);
-    font-size: 2rem;
-    font-weight: bold;
-    margin-top: 7rem;
-    margin-left: 3rem;
-    color: #000000;
+.productos-hero h1 {
+  font-size: 2.4rem;
+  color: #4a3000;
+  margin-bottom: 0.5rem;
+}
+
+.productos-hero p {
+  color: #8a6a00;
+  font-size: 1.1rem;
 }

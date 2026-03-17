@@ -1,0 +1,220 @@
+/* ── Overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+  padding: 2rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Tarjeta modal ── */
+.modal-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(30px);
+  border-radius: 2.5rem;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 750px;
+  width: 100%;
+  height: 100%;
+  box-shadow:
+    0 80px 160px -40px rgba(0, 0, 0, 0.4),
+    0 40px 80px -20px rgba(234, 179, 8, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px) scale(0.95); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ── Cerrar ── */
+.modal-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: #ef4444;
+  color: white;
+  transform: scale(1.15) rotate(90deg);
+  box-shadow: 0 8px 20px -5px rgba(239, 68, 68, 0.4);
+}
+
+/* ── Imagen ── */
+.modal-img-col {
+  overflow: hidden;
+}
+
+.modal-img {
+  width: 100%;
+  height: 100%;
+  min-height: 350px;
+  object-fit: cover;
+  transition: transform 0.7s ease;
+}
+
+.modal-img:hover {
+  transform: scale(1.05);
+}
+
+/* ── Info ── */
+.modal-info-col {
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(254,252,232,0.6) 0%, white 100%);
+}
+
+.modal-nombre {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #111827;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modal-volumen {
+  background: rgba(234, 179, 8, 0.15);
+  color: #92400e;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.3rem 1rem;
+  border-radius: 999px;
+  display: inline-block;
+  width: fit-content;
+  margin: 0;
+}
+
+.modal-descripcion {
+  font-size: 1rem;
+  color: #6b7280;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.modal-precio {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+/* ── Acciones ── */
+.modal-acciones {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255,255,255,0.9);
+  border: 2px solid rgba(234,179,8,0.3);
+  border-radius: 999px;
+  padding: 0.4rem 1.25rem;
+  width: fit-content;
+  height: 2.5rem;
+}
+
+.modal-ctrl-btn {
+  background: linear-gradient(135deg, #eab308, #d97706);
+  color: white;
+  border: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0%;
+}
+
+.modal-ctrl-btn:hover {
+  transform: scale(1.2);
+  box-shadow: 0 6px 16px -4px rgba(234,179,8,0.5);
+}
+
+.modal-ctrl-valor {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #111827;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.modal-btn-agregar {
+  background: linear-gradient(135deg, #eab308 0%, #d97706 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 15px 30px -8px rgba(234,179,8,0.5);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.modal-btn-agregar:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 25px 50px -12px rgba(234,179,8,0.7);
+}
+
+.valor-cantidad{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .modal-card {
+    grid-template-columns: 1fr;
+    max-width: 95vw;
+  }
+
+  .modal-img {
+    min-height: 200px;
+    max-height: 220px;
+  }
+}
+
