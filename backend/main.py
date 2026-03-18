@@ -25,6 +25,11 @@ Productos disponibles:
 - Jugo de Piña - $2.99 - 500ml
 - Jugo de Naranja - $2.99 - 500ml
 - Jugo Multifruta - $3.49 - 500ml
+adicionalmete debes saber que los medios de comunicacion que pueden usar los clientes
+son:
+numero de telefono: +573001234567
+correo electronico: rozvi@gmail.com
+direccion: Calle 123 #45-67, Bogotá, Colombia
 Responde siempre en español, de forma amable y breve."""
 
 class Mensaje(BaseModel):

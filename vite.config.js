@@ -4,5 +4,5 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
-  base: mode === 'production' ? '/Fabrica1/' : '/',  // Dev: /   Prod: /Fabrica1/
+  base: mode === 'production' ? '/Fabrica1/' : '/'  // ← así es correcto
 }))
