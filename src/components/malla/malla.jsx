@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from '../card/card.jsx';
 import Modal from '../modal/modal.jsx';
 import FiltrosSidebar from '../filtros/filtrossidebar.jsx';
@@ -25,36 +25,68 @@ const Malla = () => {
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [categorias, setCategorias] = useState([]);
-  const [precioMax, setPrecioMax] = useState(10);
+  const [precioMax, setPrecioMax] = useState(100000);
+  const [pandearroz, setPandearroz] = useState([]);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    // La función que hace el "viaje" al backend
+    const obtenerDatos = async () => {
+      try {
+        const respuesta = await fetch("http://localhost:8000/crud/pandearroz/");
+        const datos = await respuesta.json();
+        // Acepta respuesta como arreglo directo o dentro de una propiedad "data"
+        const lista = Array.isArray(datos)
+          ? datos
+          : Array.isArray(datos?.data)
+            ? datos.data
+            : [];
+
+        setPandearroz(lista);
+      } catch (error) {
+        console.error("Error al conectar:", error);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    obtenerDatos();
+  }, []); // El [] vacío hace que solo se ejecute UNA vez al cargar
+
+
+  const listaProductos = pandearroz.length > 0 ? pandearroz : productos;
 
   const productosFiltrados = useMemo(() => {
-    return productos.filter(p => {
-      const precio = parseFloat(p.precio.replace('$', ''));
+    return listaProductos.filter((p) => {
+      const precio = Number(String(p.precio ?? '0').replace(/[^0-9.,-]/g, '').replace(',', '.')) || 0;
       const coincideNombre = p.nombre.toLowerCase().includes(busqueda.toLowerCase());
-      const coincideCategoria = categorias.length === 0 || categorias.includes(p.categoria);
+      const coincideCategoria =
+        categorias.length === 0 || categorias.includes(p.categoria);
       const coincidePrecio = precio <= precioMax;
       return coincideNombre && coincideCategoria && coincidePrecio;
     });
-  }, [busqueda, categorias, precioMax]);
+  }, [listaProductos, busqueda, categorias, precioMax]);
 
   return (
     <div className="malla-layout"> {/* ← nuevo wrapper */}
 
       {/* Sidebar filtros */}
-      <FiltrosSidebar
-        busqueda={busqueda}
-        setBusqueda={setBusqueda}
-        categorias={categorias}
-        setCategorias={setCategorias}
-        precioMax={precioMax}
-        setPrecioMax={setPrecioMax}
-        todasCategorias={[...new Set(productos.map(p => p.categoria))]}
-      />
+        <FiltrosSidebar
+          busqueda={busqueda}
+          setBusqueda={setBusqueda}
+          categorias={categorias}
+          setCategorias={setCategorias}
+          precioMax={precioMax}
+          setPrecioMax={setPrecioMax}
+          todasCategorias={[...new Set(listaProductos.map((p) => p.categoria).filter(Boolean))]}
+        />
 
-      {/* Grid productos */}
+        {/* Grid productos */}
       <div className="malla-container">
         <div className="product-grid-container">
-          {productosFiltrados.length === 0 ? (
+          {cargando ? (
+            <p className="sin-resultados">Cargando productos...</p>
+          ) : productosFiltrados.length === 0 ? (
             <p className="sin-resultados">😕 No hay productos con esos filtros</p>
           ) : (
             productosFiltrados.map(producto => (

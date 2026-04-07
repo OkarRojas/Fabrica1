@@ -17,7 +17,7 @@ const FiltrosSidebar = ({
   const limpiarFiltros = () => {
     setBusqueda('');
     setCategorias([]);
-    setPrecioMax(10);
+    setPrecioMax(100000);
   };
 
   return (
@@ -66,7 +66,7 @@ const FiltrosSidebar = ({
         <input
           type="range"
           min="1"
-          max="10"
+          max="100000"
           step="0.5"
           value={precioMax}
           onChange={e => setPrecioMax(parseFloat(e.target.value))}
@@ -74,7 +74,7 @@ const FiltrosSidebar = ({
         />
         <div className="filtros-slider-labels">
           <span>$1</span>
-          <span>$10</span>
+          <span>$100000</span>
         </div>
       </div>
 
