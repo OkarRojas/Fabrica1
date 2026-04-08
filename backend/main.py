@@ -1,7 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 from pydantic import BaseModel
-import httpx
+from google import genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+secret_key = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=secret_key)
+
 
 app = FastAPI()
 
@@ -13,8 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "gemma2:2b"
+MODEL = "gemini-3.1-flash-lite-preview"
 
 SYSTEM_PROMPT = """Eres Rozvi, el asistente virtual de la panadería artesanal ROZVI.
 Ayudas a los clientes a conocer los productos, precios y recomendaciones.
@@ -37,15 +44,21 @@ class Mensaje(BaseModel):
 
 @app.post("/chat")
 async def chat(data: Mensaje):
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + data.historial
+    if not secret_key:
+        raise HTTPException(status_code=500, detail="Falta GEMINI_API_KEY en el backend.")
 
-    async with httpx.AsyncClient(timeout=60) as client:
-        response = await client.post(OLLAMA_URL, json={
-            "model": MODEL,
-            "messages": messages,
-            "stream": False
-        })
+    # Convertimos el historial del frontend a un texto de contexto para Gemini.
+    conversation_text = "\n".join(
+        f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in data.historial
+    )
 
-    result = response.json()
-    reply = result["message"]["content"]
-    return {"respuesta": reply}
+    try:
+        response = client.models.generate_content(
+            model=MODEL,
+            config={"system_instruction": SYSTEM_PROMPT},
+            contents=conversation_text or "Hola"
+        )
+        reply = response.text or "Lo siento, no pude generar una respuesta en este momento."
+        return {"respuesta": reply}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en Gemini: {str(e)}")
