@@ -1,22 +1,24 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import HTTPException
-from pydantic import BaseModel
-from google import genai
 import os
+
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from google import genai
+from pydantic import BaseModel
+
+from database import create_db_and_tables
+from routers import crud
 
 load_dotenv()
-secret_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=secret_key)
 
+secret_key = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=secret_key) if secret_key else None
 
 app = FastAPI()
 
-# Permite requests desde React
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # puerto de Vite
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -39,15 +41,26 @@ correo electronico: rozvi@gmail.com
 direccion: Calle 123 #45-67, Bogotá, Colombia
 Responde siempre en español, de forma amable y breve."""
 
+
 class Mensaje(BaseModel):
-    historial: list[dict]  # [{"role": "user", "content": "..."}]
+    historial: list[dict]
+
+
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
+
+@app.get("/")
+def root():
+    return {"mensaje": "La aplicación se ha iniciado correctamente."}
+
 
 @app.post("/chat")
 async def chat(data: Mensaje):
-    if not secret_key:
+    if not secret_key or client is None:
         raise HTTPException(status_code=500, detail="Falta GEMINI_API_KEY en el backend.")
 
-    # Convertimos el historial del frontend a un texto de contexto para Gemini.
     conversation_text = "\n".join(
         f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in data.historial
     )
@@ -56,9 +69,18 @@ async def chat(data: Mensaje):
         response = client.models.generate_content(
             model=MODEL,
             config={"system_instruction": SYSTEM_PROMPT},
-            contents=conversation_text or "Hola"
+            contents=conversation_text or "Hola",
         )
         reply = response.text or "Lo siento, no pude generar una respuesta en este momento."
         return {"respuesta": reply}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en Gemini: {str(e)}")
+        error_msg = str(e)
+        if "PERMISSION_DENIED" in error_msg or "API key was reported as leaked" in error_msg:
+            raise HTTPException(
+                status_code=500,
+                detail="Tu GEMINI_API_KEY fue revocada o marcada como filtrada. Genera una nueva key y actualiza tu .env.",
+            )
+        raise HTTPException(status_code=500, detail=f"Error en Gemini: {error_msg}")
+
+
+app.include_router(crud.router, prefix="/crud", tags=["crud"])

@@ -12,7 +12,7 @@ import pam5       from '../../assets/pam5.jpg';
 import pam6       from '../../assets/pam6.jpg';
 
 
-const productos = [
+const productosLocales = [
   { id: 1, nombre: 'Pan de Arroz Artesanal', precio: '$4.99', volumen: '250g', imagen: pam,  altura: 220 },
   { id: 2, nombre: 'Pan de Arroz Artesanal', precio: '$4.99', volumen: '250g', imagen: pam2, altura: 300 },
   { id: 3, nombre: 'Pan de Arroz Artesanal', precio: '$4.99', volumen: '250g', imagen: pam3, altura: 260 },
@@ -53,8 +53,28 @@ const Malla = () => {
     obtenerDatos();
   }, []); // El [] vacío hace que solo se ejecute UNA vez al cargar
 
+  const listaProductos = useMemo(() => {
+    if (pandearroz.length === 0) {
+      return productosLocales;
+    }
 
-  const listaProductos = pandearroz.length > 0 ? pandearroz : productos;
+    return pandearroz.map((producto, index) => {
+      const plantilla = productosLocales[index % productosLocales.length];
+      const precioFormateado =
+        typeof producto.precio === 'number'
+          ? `$${producto.precio.toFixed(2)}`
+          : (producto.precio ?? plantilla.precio);
+
+      return {
+        ...plantilla,
+        ...producto,
+        precio: precioFormateado,
+        volumen: producto.stock != null ? `${producto.stock} disponibles` : plantilla.volumen,
+        imagen: plantilla.imagen,
+        altura: plantilla.altura,
+      };
+    });
+  }, [pandearroz]);
 
   const productosFiltrados = useMemo(() => {
     return listaProductos.filter((p) => {
