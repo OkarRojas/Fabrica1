@@ -23,7 +23,6 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 def create_db_and_tables():
     Base.metadata.create_all(bind=engine)
 
-
 def get_session():
     db = SessionLocal()
     try:

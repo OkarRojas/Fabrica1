@@ -1,12 +1,14 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from pydantic import BaseModel
-
+from sqlalchemy.orm import Session
+from routers.models import pandearroz
 from database import create_db_and_tables
+from database import get_session
 from routers import crud
 
 load_dotenv()
@@ -16,9 +18,24 @@ client = genai.Client(api_key=secret_key) if secret_key else None
 
 app = FastAPI()
 
+def obtener_contexto_productos(db: Session):
+    productos = db.query(pandearroz).all()
+
+    texto_productos = "CATÁLOGO DE PRODUCTOS:\n"
+    for p in productos:
+        texto_productos += f"- {p.nombre}. Precio: ${p.precio}. Stock: {p.stock}\n"
+    
+    return texto_productos
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:4173",
+        "http://127.0.0.1:4173",
+        "https://okarrojas.github.io",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -27,13 +44,6 @@ MODEL = "gemini-3.1-flash-lite-preview"
 
 SYSTEM_PROMPT = """Eres Rozvi, el asistente virtual de la panadería artesanal ROZVI.
 Ayudas a los clientes a conocer los productos, precios y recomendaciones.
-Productos disponibles:
-- Pan de Arroz Artesanal - $4.99 - 250g
-- Pandebono - $3.99 - 200g
-- Pan de Yuca - $5.99 - 300g
-- Jugo de Piña - $2.99 - 500ml
-- Jugo de Naranja - $2.99 - 500ml
-- Jugo Multifruta - $3.49 - 500ml
 adicionalmete debes saber que los medios de comunicacion que pueden usar los clientes
 son:
 numero de telefono: +573001234567
@@ -57,9 +67,12 @@ def root():
 
 
 @app.post("/chat")
-async def chat(data: Mensaje):
+async def chat(data: Mensaje, db: Session = Depends(get_session)):
+
     if not secret_key or client is None:
         raise HTTPException(status_code=500, detail="Falta GEMINI_API_KEY en el backend.")
+
+    contexto_db = obtener_contexto_productos(db)
 
     conversation_text = "\n".join(
         f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in data.historial
@@ -68,7 +81,7 @@ async def chat(data: Mensaje):
     try:
         response = client.models.generate_content(
             model=MODEL,
-            config={"system_instruction": SYSTEM_PROMPT},
+            config={"system_instruction": f"{SYSTEM_PROMPT}\n y esta es la información de los productos:\n{contexto_db}"},
             contents=conversation_text or "Hola",
         )
         reply = response.text or "Lo siento, no pude generar una respuesta en este momento."

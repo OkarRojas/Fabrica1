@@ -62,8 +62,8 @@ def actualizar_stock_pan(pan_id: int, pan_data: PanDeArrozUpdate, session: Sessi
         raise HTTPException(status_code=404, detail="Pan no encontrado")
 
     update_data = pan_data.model_dump(exclude_unset=True)
-
-    db_pan.sqlmodel_update(update_data)
+    for key, value in update_data.items():
+        setattr(db_pan, key, value)
 
     session.add(db_pan)
     session.commit()
