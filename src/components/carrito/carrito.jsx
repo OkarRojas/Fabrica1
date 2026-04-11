@@ -3,9 +3,10 @@ import "./carrito.css";
 import { useCarrito } from "../context/CarritoContext";
 
 const Carrito = () => {
+
+  
   const { items, eliminarItem, sumarUnidad, restarUnidad, total,
           carritoAbierto, setCarritoAbierto } = useCarrito(); // ← NUEVO
-
   const cantidadTotal = items.reduce((acc, item) => acc + item.cantidad, 0); // ← NUEVO
 
   return (

@@ -8,9 +8,25 @@ const Modal = ({ producto, onClose }) => {
 
   if (!producto) return null;
 
+  const stockDisponible = Number(producto.volumen.split(" ")[0] ?? 0);
+  const hayStock = stockDisponible > 0;
+
+
+  const disminuir = () => setCantidad((prev) => Math.max(1, prev - 1));
+
+  const incrementar = () => {    
+    if (!hayStock) return;
+    setCantidad((prev) => Math.min(stockDisponible, prev + 1));
+
+    console.log(producto);
+  };
+
   const handleAgregar = () => {
     agregarItem(producto, cantidad);
     onClose();
+    const stockDisponible = Number(producto.volumen.split(" ")[0] ?? 0);
+    console.log("Producto agregado al carrito:", producto, "Cantidad:", cantidad);
+    console.log("Stock disponible:", stockDisponible);
   };
 
   return (
@@ -29,10 +45,7 @@ const Modal = ({ producto, onClose }) => {
         <div className="modal-info-col">
           <h2 className="modal-nombre">{producto.nombre}</h2>
           <p className="modal-volumen">{producto.volumen}</p>
-          <p className="modal-descripcion">
-            Pan artesanal horneado diariamente con ingredientes 100% naturales.
-            Crujiente por fuera, suave por dentro. ¡Ideal para cualquier momento del día!
-          </p>
+          <p className="modal-descripcion">{producto.descripcion}</p>
 
           <div className="valor-cantidad">
           <p className="modal-precio">{producto.precio}</p>
@@ -40,9 +53,9 @@ const Modal = ({ producto, onClose }) => {
           {/* Selector cantidad */}
           <div className="modal-acciones">
             <div className="modal-cantidad">
-              <button className="modal-ctrl-btn" onClick={() => setCantidad(c => Math.max(1, c - 1))}>−</button>
+              <button className="modal-ctrl-btn" onClick={disminuir}>−</button>
               <span className="modal-ctrl-valor">{cantidad}</span>
-              <button className="modal-ctrl-btn" onClick={() => setCantidad(c => c + 1)}>+</button>
+              <button className="modal-ctrl-btn" onClick={incrementar}>+</button>
             </div>
           </div>
           </div>

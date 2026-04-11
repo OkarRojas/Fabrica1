@@ -119,6 +119,7 @@ const Malla = () => {
           )}
         </div>
         <Modal
+          key={productoSeleccionado?.id || "vacio"} 
           producto={productoSeleccionado}
           onClose={() => setProductoSeleccionado(null)}
         />

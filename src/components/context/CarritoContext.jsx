@@ -6,13 +6,21 @@ export const CarritoProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false); 
 
+  const obtenerStockMaximo = (item) => {
+    if (typeof item.stock === "number") return item.stock;
+    const numero = parseInt(String(item.volumen), 10);
+    return Number.isNaN(numero) ? 0 : numero;
+  };
+
   const agregarItem = (producto, cantidad) => {
     setItems(prev => {
       const existe = prev.find(item => item.id === producto.id);
+      if (existe && existe.cantidad >= obtenerStockMaximo(producto)) return prev; // No agregar si ya alcanzó el stock máximo
+
       if (existe) {
         return prev.map(item =>
           item.id === producto.id
-            ? { ...item, cantidad: item.cantidad + cantidad }
+            ? { ...item, cantidad: item.cantidad + cantidad? item.cantidad<obtenerStockMaximo(producto) ? cantidad : 0 : 1 }
             : item
         );
       }
@@ -30,7 +38,12 @@ export const CarritoProvider = ({ children }) => {
   const sumarUnidad = (id) => {
     setItems(prev =>
       prev.map(item =>
-        item.id === id ? { ...item, cantidad: item.cantidad + 1 } : item
+        item.id === id
+          ? {
+              ...item,
+              cantidad: Math.min(item.cantidad + 1, obtenerStockMaximo(item)),
+            }
+          : item
       )
     );
   };

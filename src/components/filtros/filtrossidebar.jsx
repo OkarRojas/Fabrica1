@@ -25,14 +25,19 @@ const FiltrosSidebar = ({
 
       <div className="filtros-header">
         <h3>🔍 Filtros</h3>
-        <button className="filtros-limpiar" onClick={limpiarFiltros}>
-          Limpiar
-        </button>
+        
       </div>
 
       {/* Búsqueda */}
+
       <div className="filtros-seccion">
-        <label className="filtros-label">Buscar</label>
+        <div>
+          <label className="filtros-label">Buscar</label>
+        <button className="filtros-limpiar" onClick={limpiarFiltros}>
+          Limpiar
+        </button>
+        
+      </div>
         <input
           type="text"
           className="filtros-input"
