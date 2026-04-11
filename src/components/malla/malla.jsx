@@ -36,6 +36,8 @@ const Malla = () => {
         const respuesta = await fetch("http://localhost:8000/crud/pandearroz/");
         const datos = await respuesta.json();
         // Acepta respuesta como arreglo directo o dentro de una propiedad "data"
+
+        console.log("DATOS CRUDOS DEL BACKEND:", datos)
         const lista = Array.isArray(datos)
           ? datos
           : Array.isArray(datos?.data)

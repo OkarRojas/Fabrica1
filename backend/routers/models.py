@@ -14,13 +14,14 @@ class pandearrozBase(BaseModel):
     nombre: str
     precio: float
     stock: int
-
+    descripcion: str
 
 class pandearroz(Base):
     __tablename__ = "pandearroz"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     nombre: Mapped[str] = mapped_column(String(255), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(500), nullable=True)
     precio: Mapped[float] = mapped_column(Float, nullable=False)
     stock: Mapped[int] = mapped_column(Integer, nullable=False)
 
@@ -32,6 +33,7 @@ class pandearrozCreate(pandearrozBase):
 class PanDeArrozUpdate(BaseModel):
     nombre: str | None = None
     stock: int | None = None
+    descripcion: str | None = None
     precio: float | None = None
 
 
