@@ -1,9 +1,12 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const CarritoContext = createContext();
 
 export const CarritoProvider = ({ children }) => {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(() => {
+    const guardado = localStorage.getItem("carrito_rozvi");
+    return guardado ? JSON.parse(guardado) : [];
+  });
   const [carritoAbierto, setCarritoAbierto] = useState(false); 
 
   const obtenerStockMaximo = (item) => {
@@ -63,6 +66,10 @@ export const CarritoProvider = ({ children }) => {
     const precio = parseFloat(item.precio.replace("$", ""));
     return acc + precio * item.cantidad;
   }, 0).toFixed(2);
+
+  useEffect(() => {
+    localStorage.setItem("carrito_rozvi", JSON.stringify(items));
+  }, [items]);
 
   return (
     <CarritoContext.Provider value={{ items, agregarItem, eliminarItem, sumarUnidad, restarUnidad, total, carritoAbierto, setCarritoAbierto }}>

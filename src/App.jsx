@@ -12,6 +12,9 @@ import Carrito from './components/carrito/carrito.jsx'
 import ContactForm from './components/form/contactform.jsx'
 import { CarritoProvider } from './components/context/CarritoContext.jsx'
 import ChatBot from './components/chatbot/chatbot.jsx'
+import Users from './components/users/users.jsx'
+import Envio from './components/envio/envio.jsx'
+import Checkout from './components/checkout/checkout.jsx'
 
 function App() {
   return (
@@ -57,6 +60,36 @@ function App() {
             </>
           }
         />  
+        <Route
+          path="/users"
+          element={
+            <>
+              <Head />
+              <Users />
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/envio"
+          element={
+            <>
+              <Head />
+              <Envio />
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <>
+              <Head />
+              <Checkout />
+              <Footer />
+            </>
+          }
+        />
                
         
       </Routes>

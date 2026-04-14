@@ -1,10 +1,11 @@
 import React from "react";
 import "./carrito.css";
+import { useNavigate } from "react-router-dom";
 import { useCarrito } from "../context/CarritoContext";
 
 const Carrito = () => {
+  const navigate = useNavigate();
 
-  
   const { items, eliminarItem, sumarUnidad, restarUnidad, total,
           carritoAbierto, setCarritoAbierto } = useCarrito(); // ← NUEVO
   const cantidadTotal = items.reduce((acc, item) => acc + item.cantidad, 0); // ← NUEVO
@@ -96,7 +97,9 @@ const Carrito = () => {
               <span className="carrito-total-label">Total:</span>
               <span className="carrito-total-valor">${total}</span>
             </div>
-            <button className="carrito-btn-pedir">Pedir Ahora 🚀</button>
+            <button className="carrito-btn-pedir" onClick={() => navigate("/users")}>
+              Pedir Ahora 🚀
+            </button>
           </div>
         )}
 

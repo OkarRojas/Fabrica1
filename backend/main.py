@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from routers.models import pandearroz
+from routers.models import productos
 from database import create_db_and_tables
 from database import get_session
 from routers import crud
@@ -19,11 +19,11 @@ client = genai.Client(api_key=secret_key) if secret_key else None
 app = FastAPI()
 
 def obtener_contexto_productos(db: Session):
-    productos = db.query(pandearroz).all()
+    productos = db.query(productos).all()
 
     texto_productos = "CATÁLOGO DE PRODUCTOS:\n"
     for p in productos:
-        texto_productos += f"- {p.nombre}. Precio: ${p.precio}. Stock: {p.stock}\n"
+        texto_productos += f"- {p.nombre}. Precio: ${p.precio}. Stock: {p.stock} \n"
     
     return texto_productos
 
@@ -42,14 +42,25 @@ app.add_middleware(
 
 MODEL = "gemini-3.1-flash-lite-preview"
 
-SYSTEM_PROMPT = """Eres Rozvi, el asistente virtual de la panadería artesanal ROZVI.
-Ayudas a los clientes a conocer los productos, precios y recomendaciones.
-adicionalmete debes saber que los medios de comunicacion que pueden usar los clientes
-son:
-numero de telefono: +573001234567
-correo electronico: rozvi@gmail.com
-direccion: Calle 123 #45-67, Bogotá, Colombia
-Responde siempre en español, de forma amable y breve."""
+SYSTEM_PROMPT = """Eres Rozvi, el asistente virtual experto de la panadería artesanal ROZVI. 
+Tu objetivo no es solo informar, sino actuar como un asesor de ventas inteligente.
+
+REGLAS DE INTERACCIÓN:
+1. PERSONALIDAD: Responde siempre en español, de forma muy amable, entusiasta y breve.
+2. CONOCIMIENTO DE PRODUCTOS: Tienes acceso en tiempo real al catálogo. Úsalo para:
+   - Identificar el producto más barato si el cliente tiene un presupuesto ajustado.
+   - Recomendar productos que tengan stock disponible si otros están agotados.
+   - Comparar opciones (ej: "Si buscas algo ligero, te recomiendo el X que cuesta solo Y").
+3. PROACTIVIDAD: Si un cliente pregunta por un producto, menciona su precio y si quedan pocas unidades (stock bajo).
+4. INFORMACIÓN DE CONTACTO:
+   - Teléfono: +573001234567
+   - Email: rozvi@gmail.com
+   - Dirección: Calle 123 #45-67, Bogotá, Colombia.
+5.quiero que ofrezcas ventas al por mayor, si el cliente parece interesado en comprar grandes cantidades, sugiere descuentos o promociones especiales.
+
+OBJETIVO DE VENTA:
+Si el cliente parece indeciso, sugiere el 'Pan de Arroz Artesanal' como nuestra especialidad de la casa.
+Siempre prioriza la satisfacción del cliente con respuestas útiles que faciliten su compra."""
 
 
 class Mensaje(BaseModel):

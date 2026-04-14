@@ -33,7 +33,7 @@ const Malla = () => {
     // La función que hace el "viaje" al backend
     const obtenerDatos = async () => {
       try {
-        const respuesta = await fetch("http://localhost:8000/crud/pandearroz/");
+        const respuesta = await fetch("http://localhost:8000/crud/productos/");
         const datos = await respuesta.json();
         // Acepta respuesta como arreglo directo o dentro de una propiedad "data"
 

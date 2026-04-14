@@ -5,68 +5,68 @@ from dependencies import verify_secret_key
 
 from sqlalchemy.orm import Session
 
-from .models import PanDeArrozUpdate, pandearroz, pandearrozCreate, pandearrozRead
+from .models import productos, productosUpdate,  productosCreate, productosRead
 
 router = APIRouter()
 
 
-@router.post("/pandearroz/", response_model=pandearrozRead, dependencies=[Depends(verify_secret_key)])
-def create_pandearroz(payload: pandearrozCreate, session: Session = Depends(get_session)):
-    db_pandearroz = pandearroz(
+@router.post("/productos/", response_model=productosRead, dependencies=[Depends(verify_secret_key)])
+def create_productos(payload: productosCreate, session: Session = Depends(get_session)):
+    db_productos = productos(
         nombre=payload.nombre,
         precio=payload.precio,
         stock=payload.stock,
     )
-    session.add(db_pandearroz)
+    session.add(db_productos)
     session.commit()
-    session.refresh(db_pandearroz)
-    return db_pandearroz
+    session.refresh(db_productos)
+    return db_productos
 
 
-@router.get("/pandearroz/")
-def read_pandearroz(session: Session = Depends(get_session)):
-    pandearroz_list = session.query(pandearroz).all()
-    return pandearroz_list
+@router.get("/productos/")
+def read_productos(session: Session = Depends(get_session)):
+    productos_list = session.query(productos).all()
+    return productos_list
 
 
-@router.put("/pandearroz/{pandearroz_id}", response_model=pandearrozRead, dependencies=[Depends(verify_secret_key)])
-def update_pandearroz(
-    pandearroz_id: int,
-    payload: pandearrozCreate,
+@router.put("/productos/{productos_id}", response_model=productosRead, dependencies=[Depends(verify_secret_key)])
+def update_productos(
+    productos_id: int,
+    payload: productosUpdate,
     session: Session = Depends(get_session),
 ):
-    db_pandearroz = session.get(pandearroz, pandearroz_id)
-    if not db_pandearroz:
-        raise HTTPException(status_code=404, detail="Pandearroz not found")
+    db_productos = session.get(productos, productos_id)
+    if not db_productos:
+        raise HTTPException(status_code=404, detail="Productos not found")
     for key, value in payload.model_dump().items():
-        setattr(db_pandearroz, key, value)
+        setattr(db_productos, key, value)
     session.commit()
-    session.refresh(db_pandearroz)
-    return db_pandearroz
+    session.refresh(db_productos)
+    return db_productos
 
 
-@router.delete("/pandearroz/{pandearroz_id}", dependencies=[Depends(verify_secret_key)])
-def delete_pandearroz(pandearroz_id: int, session: Session = Depends(get_session)):
-    db_pandearroz = session.get(pandearroz, pandearroz_id)
-    if not db_pandearroz:
-        raise HTTPException(status_code=404, detail="Pandearroz not found")
-    session.delete(db_pandearroz)
+@router.delete("/productos/{productos_id}", dependencies=[Depends(verify_secret_key)])
+def delete_productos(productos_id: int, session: Session = Depends(get_session)):
+    db_productos = session.get(productos, productos_id)
+    if not db_productos:
+        raise HTTPException(status_code=404, detail="Productos not found")
+    session.delete(db_productos)
     session.commit()
-    return {"detail": "Pandearroz deleted successfully"}
+    return {"detail": "Productos deleted successfully"}
 
 
-@router.patch("/pan-de-arroz/{pan_id}", response_model=pandearrozRead, dependencies=[Depends(verify_secret_key)])
-def actualizar_stock_pan(pan_id: int, pan_data: PanDeArrozUpdate, session: Session = Depends(get_session)):
-    db_pan = session.get(pandearroz, pan_id)
-    if not db_pan:
-        raise HTTPException(status_code=404, detail="Pan no encontrado")
+@router.patch("/productos/{productos_id}", response_model=productosRead, dependencies=[Depends(verify_secret_key)])
+def actualizar_stock_productos(productos_id: int, payload: productosUpdate, session: Session = Depends(get_session)):
+    db_productos = session.get(productos, productos_id)
+    if not db_productos:
+        raise HTTPException(status_code=404, detail="Productos not found")
 
-    update_data = pan_data.model_dump(exclude_unset=True)
+    update_data = payload.model_dump(exclude_unset=True)
     for key, value in update_data.items():
-        setattr(db_pan, key, value)
+        setattr(db_productos, key, value)
 
-    session.add(db_pan)
+    session.add(db_productos)
     session.commit()
-    session.refresh(db_pan)
+    session.refresh(db_productos)
 
-    return db_pan
+    return db_productos
