@@ -95,3 +95,19 @@ class productosUpdate(BaseModel):
 class productosRead(productosbase):
     id: int
     model_config = ConfigDict(from_attributes=True)
+
+class pedidoCreate(BaseModel):
+    usuario_id: int
+    direccion_entrega: str
+    productos: List[dict]  # Lista de {producto_id: int, cantidad: int}
+
+
+class PedidoRead(BaseModel):
+    id: int
+    usuario_id: int
+    fecha: datetime
+    total: float
+    estado: str
+    direccion_entrega: str
+    items: List[dict]  # Lista de {producto_id, cantidad, precio_unitario}
+    model_config = ConfigDict(from_attributes=True)
