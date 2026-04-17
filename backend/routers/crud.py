@@ -30,18 +30,18 @@ def read_productos(session: Session = Depends(get_session)):
     return productos_list
 
 
-@router.post("/pedidos/", response_model=PedidoRead, dependencies=[Depends(verify_secret_key)])
+@router.post("/pedidos/", response_model=PedidoRead)
 def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session)):
     total = 0
     productos_a_actualizar = []
     try:
         for item in datos_pedido.productos:
-            producto_id = item.get("producto_id")
-            cantidad = item.get("cantidad")
-
+            producto_id = item.get("producto_id") if isinstance(item, dict) else item.producto_id
+            cantidad = item.get("cantidad") if isinstance(item, dict) else item.cantidad
+            
             if producto_id is None or cantidad is None:
                 raise HTTPException(status_code=422, detail="Cada item debe incluir producto_id y cantidad")
-
+            
             producto = db.query(models.productos).filter(models.productos.id == producto_id).first()
             if not producto:
                 raise HTTPException(status_code=404, detail=f"Producto con id {producto_id} no existe")
@@ -59,7 +59,7 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
             cliente_id=datos_pedido.usuario_id,
             total=total,
             estado="Pendiente",
-            direccion_entrega=datos_pedido.direccion_entrega,
+            direccion_entrega=datos_pedido.direccion_entrega
         )
         db.add(nuevo_pedido)
         db.flush()   
@@ -87,6 +87,7 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
                     "producto_id": item.producto_id,
                     "cantidad": item.cantidad,
                     "precio_unitario": item.precio_unitario,
+                    "Precio total": item.cantidad * item.precio_unitario
                 }
                 for item in nuevo_pedido.items
             ],
@@ -101,6 +102,29 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
 
 
     
+@router.get("/pedidos/")
+def leer_pedidos(db: Session = Depends(get_session)):
+    pedidos = db.query(models.Pedido).all()
+    return [
+        {
+            "id": pedido.id,
+            "usuario_id": pedido.cliente_id,
+            "fecha": pedido.fecha,
+            "total": pedido.total,
+            "estado": pedido.estado,
+            "direccion_entrega": pedido.direccion_entrega,
+            "items": [
+                {
+                    "producto_id": item.producto_id,
+                    "cantidad": item.cantidad,
+                    "precio_unitario": item.precio_unitario,
+                }
+                for item in pedido.items
+            ],
+        }
+        for pedido in pedidos
+    ]
+
 
 @router.put("/productos/{productos_id}", response_model=productosRead, dependencies=[Depends(verify_secret_key)])
 def update_productos(
