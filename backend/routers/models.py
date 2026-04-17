@@ -56,11 +56,12 @@ class Pedido(Base):
     __tablename__ = "pedidos"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id"), nullable=False)
+    cliente: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     fecha: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     total: Mapped[float] = mapped_column(Float, nullable=False)
     estado: Mapped[str] = mapped_column(String(50), default="Pendiente")
     direccion_entrega: Mapped[str] = mapped_column(String(50), nullable=False)
-    telefono: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    telefono: Mapped[Optional[str]] = mapped_column(String(10), nullable=False)
     
     cliente: Mapped["Cliente"] = relationship(back_populates="pedidos")
     items: Mapped[List["DetallePedido"]] = relationship(back_populates="pedido")
@@ -94,23 +95,26 @@ class productosUpdate(BaseModel):
     descripcion: str | None = None
     precio: float | None = None
     telefono: str | None = None
+
 class productosRead(productosbase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
 class pedidoCreate(BaseModel):
-    usuario_id: int
+    usuario_id: Optional[int] = None
     direccion_entrega: str
     productos: List[dict]  # Lista de {producto_id: int, cantidad: int}
-
+    telefono: str
+    cliente: Optional[str] = None
 
 class PedidoRead(BaseModel):
     id: int
-    usuario_id: int
+    usuario_id: Optional[int] = None
+    cliente: Optional[str] = None
     fecha: datetime
     total: float
     estado: str
     direccion_entrega: str
-    telefono: str
+    telefono: Optional[str] = None
     items: List[dict]  # Lista de {producto_id, cantidad, precio_unitario}
     model_config = ConfigDict(from_attributes=True)
