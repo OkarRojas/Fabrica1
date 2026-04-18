@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-const CarritoContext = createContext();
+export const CarritoContext = createContext();
 
 export const CarritoProvider = ({ children }) => {
   const [items, setItems] = useState(() => {
@@ -61,6 +61,19 @@ export const CarritoProvider = ({ children }) => {
         .filter(item => item.cantidad > 0)
     );
   };
+  const limpiarCarrito = () => {
+    setItems([]);
+    localStorage.removeItem("carrito_rozvi");
+  };
+
+  const totalCalculado = items.reduce((acc, item) => {
+    const precio = parseFloat(item.precio.replace("$", ""));
+    return acc + precio * item.cantidad;
+  }, 0).toFixed(2);
+
+  useEffect(() => {
+    localStorage.setItem("carrito_rozvi", JSON.stringify(items));
+  }, [items]);
 
   const total = items.reduce((acc, item) => {
     const precio = parseFloat(item.precio.replace("$", ""));
@@ -72,7 +85,17 @@ export const CarritoProvider = ({ children }) => {
   }, [items]);
 
   return (
-    <CarritoContext.Provider value={{ items, agregarItem, eliminarItem, sumarUnidad, restarUnidad, total, carritoAbierto, setCarritoAbierto }}>
+    <CarritoContext.Provider value={{ 
+      items,           // ← SE LLAMA ITEMS
+      agregarItem, 
+      eliminarItem, 
+      sumarUnidad, 
+      restarUnidad, 
+      total: totalCalculado, 
+      carritoAbierto, 
+      setCarritoAbierto,
+      limpiarCarrito   // ← AGREGADO
+    }}>
       {children}
     </CarritoContext.Provider>
   );

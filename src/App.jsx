@@ -18,9 +18,12 @@ import Checkout from './components/checkout/checkout.jsx'
 
 function App() {
   return (
-    <>
+    /* COLOCAMOS EL PROVIDER AQUÍ: 
+       Ahora el carrito es "global". Lo que agregues en una página
+       se mantendrá guardado cuando navegues a otra.
+    */
+    <CarritoProvider>
       <ChatBot />
-
       <Routes>
         <Route
           path="/"
@@ -34,21 +37,20 @@ function App() {
             </>
           }
         />
+        
         <Route
           path="/productos"
           element={
             <>
-              <CarritoProvider>
               <Head />
               <Productos />
               <Malla />
               <Carrito />
-              </CarritoProvider>
-              
-
+              {/* Quitamos el Provider de aquí adentro */}
             </>
           }
         />
+
         <Route
           path="/contacto"
           element={
@@ -56,10 +58,10 @@ function App() {
               <Head />
               <ContactForm />
               <Footer />
-              
             </>
           }
         />  
+
         <Route
           path="/users"
           element={
@@ -70,6 +72,7 @@ function App() {
             </>
           }
         />
+
         <Route
           path="/envio"
           element={
@@ -80,6 +83,7 @@ function App() {
             </>
           }
         />
+
         <Route
           path="/checkout"
           element={
@@ -87,15 +91,13 @@ function App() {
               <Head />
               <Checkout />
               <Footer />
+              {/* Limpiamos las etiquetas mal cerradas que tenías aquí */}
             </>
           }
         />
-               
-        
       </Routes>
-      
-    </>
-  )
+    </CarritoProvider>
+  );
 }
 
-export default App
+export default App;

@@ -1,72 +1,79 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { CarritoContext } from '../context/CarritoContext';
 import "./envio.css";
 
 const Envio = () => {
-    const [productos, setProductos] = useState([]);
-    const [total, setTotal] = useState("0.00");
+    const { items, total, limpiarCarrito } = useContext(CarritoContext);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        // Recuperamos los datos del almacenamiento local
-        const datosGuardados = localStorage.getItem('carrito_rozvi');
+    const [nombre, setNombre] = useState('');
+    const [direccion, setDireccion] = useState('');
+    const [telefono, setTelefono] = useState('');
+
+    const manejarEnvio = async (e) => {
+        e.preventDefault();
         
-        if (datosGuardados) {
-            const carritoRecuperado = JSON.parse(datosGuardados);
-            setProductos(carritoRecuperado);
-
-            // Calculamos el total recorriendo el arreglo recuperado
-            // Usamos la misma lógica de tu CarritoContext para limpiar el precio
-            const sumaTotal = carritoRecuperado.reduce((acc, item) => {
-                const precio = parseFloat(item.precio.replace("$", ""));
-                return acc + precio * item.cantidad;
-            }, 0);
-
-            setTotal(sumaTotal.toFixed(2));
+        if (!items || items.length === 0) {
+            return alert("No hay productos en tu pedido.");
         }
-    }, []);
 
-    const handleConfirmarPedido = (event) => {
-        event.preventDefault();
-        navigate("/checkout");
+        const productosParaBackend = items.map(item => ({
+            producto_id: item.id,
+            cantidad: item.cantidad
+        }));
+
+        const datosPedido = {
+            usuario_id: null, // Cuenta Sombra
+            cliente_sombra: nombre,
+            direccion_entrega: direccion,
+            telefono: telefono,
+            productos: productosParaBackend
+        };
+
+        try {
+            const respuesta = await fetch('http://localhost:8000/crud/pedidos/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosPedido)
+            });
+
+            if (respuesta.ok) {
+                const resultado = await respuesta.json();
+                alert(`¡Gracias ${nombre}! Pedido #${resultado.id} recibido. 🥖`);
+                limpiarCarrito(); // Vacía el carrito
+                navigate("/");    // Vuelve al inicio
+            } else {
+                alert("Error al procesar el pedido en el servidor.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Error de conexión.");
+        }
     };
 
     return (
         <div className="envio-hero">
-            <h1>Resumen de tu Pedido</h1>
+            <h1>Confirmación de Compra</h1>
             
-            <div className="lista-confirmacion">
-                {productos.length > 0 ? (
-                    productos.map((item) => (
-                        <div key={item.id} className="item-confirmacion">
-                            <p>
-                                <strong>{item.nombre}</strong> x {item.cantidad} 
-                                <span> - ${(parseFloat(item.precio.replace("$", "")) * item.cantidad).toFixed(2)}</span>
-                            </p>
-                        </div>
-                    ))
-                ) : (
-                    <p>No hay productos para confirmar.</p>
-                )}
-            </div>
-
-            <div className="total-confirmacion">
+            <div className="resumen-lista">
+                {items && items.map((item) => (
+                    <div key={item.id} className="item-resumen">
+                        <p>{item.nombre} x {item.cantidad} - ${ (parseFloat(item.precio.replace("$","")) * item.cantidad).toFixed(2) }</p>
+                    </div>
+                ))}
                 <h3>Total a pagar: ${total}</h3>
             </div>
 
-            <p>Entregamos tu pan fresco directamente a tu domicilio 🍞</p>
-
-            <div className="datosdeenvio">
-                <h2>Datos de Envío</h2>
-                <form onSubmit={handleConfirmarPedido}>
-                    <input type="text" placeholder="Nombre Completo" required />
-                    <input type="text" placeholder="Dirección de Envío" required />
-                    <input type="text" placeholder="Número de Teléfono" required />
-                    <button type="submit">Confirmar Pedido</button>
-                </form>
-            </div>
+            <form onSubmit={manejarEnvio} className="envio-form">
+                <h2>Datos de Entrega</h2>
+                <input type="text" placeholder="Nombre" value={nombre} onChange={(e)=>setNombre(e.target.value)} required />
+                <input type="text" placeholder="Dirección" value={direccion} onChange={(e)=>setDireccion(e.target.value)} required />
+                <input type="text" placeholder="Teléfono" value={telefono} onChange={(e)=>setTelefono(e.target.value)} required />
+                <button type="submit" className="btn-finalizar">Finalizar Pedido 🍞</button>
+            </form>
         </div>
     );
-}
+};
 
 export default Envio;

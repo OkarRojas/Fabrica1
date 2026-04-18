@@ -5,7 +5,16 @@ from dependencies import verify_secret_key
 
 from sqlalchemy.orm import Session
 
-from .models import productos, productosUpdate,  productosCreate, productosRead, pedidoCreate, PedidoRead
+from .models import (
+    productos,
+    productosUpdate,
+    productosCreate,
+    productosRead,
+    pedidoCreate,
+    PedidoRead,
+    ClienteCreate,
+    ClienteRead,
+)
 from routers import models
 
 router = APIRouter()
@@ -29,42 +38,86 @@ def read_productos(session: Session = Depends(get_session)):
     productos_list = session.query(productos).all()
     return productos_list
 
+@router.post("/clientes/", response_model=ClienteRead)
+def crear_usuario(usuario_id: int, payload: ClienteCreate, session: Session = Depends(get_session)):
+    db_usuario = session.query(models.Cliente).filter(models.Cliente.id == usuario_id).first()
+    if db_usuario:
+        raise HTTPException(status_code=400, detail="Usuario ya existe")
+    
+    nuevo_usuario = models.Cliente(
+        id=usuario_id,
+        nombre=payload.nombre,
+        email=payload.email,
+        telefono=payload.telefono,
+        hashed_password=None
+    )
+    session.add(nuevo_usuario)
+    session.commit()
+    session.refresh(nuevo_usuario)
+    return nuevo_usuario
+
 
 @router.post("/pedidos/", response_model=PedidoRead)
 def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session)):
     total = 0
     productos_a_actualizar = []
+    
     try:
+        # 1. Validación de stock y cálculo de total (tu lógica original)
         for item in datos_pedido.productos:
             producto_id = item.get("producto_id") if isinstance(item, dict) else item.producto_id
             cantidad = item.get("cantidad") if isinstance(item, dict) else item.cantidad
             
-            if producto_id is None or cantidad is None:
-                raise HTTPException(status_code=422, detail="Cada item debe incluir producto_id y cantidad")
-            
             producto = db.query(models.productos).filter(models.productos.id == producto_id).first()
             if not producto:
-                raise HTTPException(status_code=404, detail=f"Producto con id {producto_id} no existe")
+                raise HTTPException(status_code=404, detail=f"Producto {producto_id} no existe")
             
             if producto.stock >= cantidad:
                 producto.stock -= cantidad
                 db.add(producto)
                 total += cantidad * producto.precio
+                productos_a_actualizar.append((producto, cantidad))
             else:
-                raise HTTPException(status_code=400, detail=f"Stock insuficiente para el producto {producto.nombre}")
+                raise HTTPException(status_code=400, detail=f"No hay stock de {producto.nombre}")
 
-            productos_a_actualizar.append((producto, cantidad))
-        
+        # 2. LÓGICA DE LA "CUENTA SOMBRA" 👤
+        # Aquí decidimos de quién es el pedido
+        id_final_cliente = datos_pedido.usuario_id
+
+        if id_final_cliente is None:
+            # Si no hay ID, es un invitado. ¡Creamos el cliente ahora mismo!
+            nuevo_usuario_sombra = models.Cliente(
+                nombre=datos_pedido.cliente_sombra or "Invitado ROZVI",
+                telefono=datos_pedido.telefono,
+                email=None,            # Los invitados no suelen dar email al inicio
+                hashed_password=None   # Sin contraseña porque es una Cuenta Sombra
+            )
+            db.add(nuevo_usuario_sombra)
+            
+            # EL PASO CLAVE: db.flush()
+            # Le dice a la DB: "Registra esto un momento pero no cierres la transacción".
+            # La DB genera el ID (el número) y se lo devuelve al objeto.
+            db.flush() 
+            
+            # Ahora ya tenemos un número real para usar
+            id_final_cliente = nuevo_usuario_sombra.id
+
+        # 3. CREACIÓN DEL PEDIDO
+        # Usamos id_final_cliente, que siempre será un NÚMERO entero.
         nuevo_pedido = models.Pedido(
-            cliente_id=datos_pedido.usuario_id,
+            cliente_id=id_final_cliente,
             total=total,
             estado="Pendiente",
-            direccion_entrega=datos_pedido.direccion_entrega
+            direccion_entrega=datos_pedido.direccion_entrega,
+            # --- AQUÍ ESTABA EL ERROR: Faltaban estas dos líneas ---
+            telefono=datos_pedido.telefono,         
+            cliente_sombra=datos_pedido.cliente_sombra 
         )
         db.add(nuevo_pedido)
-        db.flush()   
+        db.flush() # Obtenemos el ID del pedido para los detalles
+
+        # 4. Guardar los detalles (tu lógica original)
         for producto_obj, cantidad_pedida in productos_a_actualizar:
-          
             detalle = models.DetallePedido(
                 pedido_id=nuevo_pedido.id,
                 producto_id=producto_obj.id,
@@ -73,32 +126,15 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
             )
             db.add(detalle)
 
-        db.commit()
+        # 5. FINALIZAR
+        db.commit() # Si todo salió bien, guardamos todo permanentemente
         db.refresh(nuevo_pedido)
-        return {
-            "id": nuevo_pedido.id,
-            "usuario_id": nuevo_pedido.cliente_id,
-            "fecha": nuevo_pedido.fecha,
-            "total": nuevo_pedido.total,
-            "estado": nuevo_pedido.estado,
-            "direccion_entrega": nuevo_pedido.direccion_entrega,
-            "items": [
-                {
-                    "producto_id": item.producto_id,
-                    "cantidad": item.cantidad,
-                    "precio_unitario": item.precio_unitario,
-                    "Precio total": item.cantidad * item.precio_unitario
-                }
-                for item in nuevo_pedido.items
-            ],
-        }
         
-    except HTTPException:
-        db.rollback()
-        raise
+        return nuevo_pedido # Pydantic se encarga de formatear la respuesta
+
     except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error creando pedido: {str(e)}")
+        db.rollback() # Si algo falló, deshacemos todo para no dejar basura en la DB
+        raise HTTPException(status_code=500, detail=f"Error en ROZVI: {str(e)}")
 
 
     
