@@ -15,6 +15,7 @@ import ChatBot from './components/chatbot/chatbot.jsx'
 import Users from './components/users/users.jsx'
 import Envio from './components/envio/envio.jsx'
 import Checkout from './components/checkout/checkout.jsx'
+import Registro from './components/registro/registro.jsx'
 
 function App() {
   return (
@@ -92,6 +93,17 @@ function App() {
               <Checkout />
               <Footer />
               {/* Limpiamos las etiquetas mal cerradas que tenías aquí */}
+            </>
+          }
+        />
+
+        <Route
+          path="/registro"
+          element={
+            <>
+              <Head />
+              <Registro />
+              <Footer />
             </>
           }
         />

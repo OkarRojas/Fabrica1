@@ -39,13 +39,8 @@ def read_productos(session: Session = Depends(get_session)):
     return productos_list
 
 @router.post("/clientes/", response_model=ClienteRead)
-def crear_usuario(usuario_id: int, payload: ClienteCreate, session: Session = Depends(get_session)):
-    db_usuario = session.query(models.Cliente).filter(models.Cliente.id == usuario_id).first()
-    if db_usuario:
-        raise HTTPException(status_code=400, detail="Usuario ya existe")
-    
+def crear_usuario(payload: ClienteCreate, session: Session = Depends(get_session)):
     nuevo_usuario = models.Cliente(
-        id=usuario_id,
         nombre=payload.nombre,
         email=payload.email,
         telefono=payload.telefono,
