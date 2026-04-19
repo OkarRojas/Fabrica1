@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-
+from security import obtener_hash_password
 from database import get_session
 from dependencies import verify_secret_key
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from .models import (
     productos,
@@ -40,16 +41,23 @@ def read_productos(session: Session = Depends(get_session)):
 
 @router.post("/clientes/", response_model=ClienteRead)
 def crear_usuario(payload: ClienteCreate, session: Session = Depends(get_session)):
+    
+    password_hash = obtener_hash_password(payload.password)
+
     nuevo_usuario = models.Cliente(
         nombre=payload.nombre,
         email=payload.email,
         telefono=payload.telefono,
-        hashed_password=None
+        hashed_password=password_hash,
     )
-    session.add(nuevo_usuario)
-    session.commit()
-    session.refresh(nuevo_usuario)
-    return nuevo_usuario
+    try:
+        session.add(nuevo_usuario)
+        session.commit()
+        session.refresh(nuevo_usuario)
+        return nuevo_usuario
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=400, detail="El correo ya esta registrado")
 
 
 @router.post("/pedidos/", response_model=PedidoRead)

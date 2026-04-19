@@ -31,9 +31,10 @@ const Registro = () => {
             });
             if (respuesta.ok) {
                 alert("Registro exitoso. ¡Bienvenido a la familia Rozvi! 🥖");
-                navigate("/login");
+                navigate("/envio");
             } else {
-                alert("Error al registrarse. Intenta nuevamente.");
+                const data = await respuesta.json().catch(() => ({}));
+                alert(data.detail || "Error al registrarse. Intenta nuevamente.");
             }
         } catch (error) {
             console.error("Error al enviar el formulario:", error);

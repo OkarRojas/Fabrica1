@@ -129,6 +129,7 @@ class ClienteCreate(BaseModel):
     nombre: str
     email: Optional[str] = None
     telefono: Optional[str] = None
+    password: str
 
 
 class ClienteRead(BaseModel):
