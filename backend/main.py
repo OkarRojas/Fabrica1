@@ -6,10 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from routers.models import productos
-from database import create_db_and_tables
+from routers.models import productos as ProductoModel
+from routers.models import Cliente as ClienteModel
+from database import create_db_and_tables, SessionLocal
 from database import get_session
 from routers import crud
+from security import obtener_hash_password
 
 load_dotenv()
 
@@ -19,13 +21,54 @@ client = genai.Client(api_key=secret_key) if secret_key else None
 app = FastAPI()
 
 def obtener_contexto_productos(db: Session):
-    productos = db.query(productos).all()
+    productos_db = db.query(ProductoModel).all()
 
     texto_productos = "CATÁLOGO DE PRODUCTOS:\n"
-    for p in productos:
+    for p in productos_db:
         texto_productos += f"- {p.nombre}. Precio: ${p.precio}. Stock: {p.stock} \n"
     
     return texto_productos
+
+
+def seed_productos_iniciales():
+    db = SessionLocal()
+    try:
+        hay_productos = db.query(ProductoModel).first()
+        if hay_productos:
+            return
+
+        productos_iniciales = [
+            ProductoModel(nombre="Pan de Arroz Artesanal", descripcion="Tradicional", precio=4.99, stock=50),
+            ProductoModel(nombre="Pan de Arroz Artesanal Queso", descripcion="Con queso", precio=5.49, stock=40),
+            ProductoModel(nombre="Pan de Arroz Artesanal Integral", descripcion="Version integral", precio=5.99, stock=35),
+            ProductoModel(nombre="Pan de Arroz Artesanal Mini", descripcion="Presentacion mini", precio=3.99, stock=80),
+            ProductoModel(nombre="Pan de Arroz Artesanal Grande", descripcion="Presentacion familiar", precio=8.99, stock=25),
+            ProductoModel(nombre="Pan de Arroz Artesanal Mix", descripcion="Surtido", precio=6.99, stock=30),
+        ]
+        db.add_all(productos_iniciales)
+        db.commit()
+    finally:
+        db.close()
+
+
+def seed_admin_user():
+    db = SessionLocal()
+    try:
+        admin_existente = db.query(ClienteModel).filter(ClienteModel.email == "admin@rozvi.com").first()
+        if admin_existente:
+            return
+
+        admin = ClienteModel(
+            nombre="Administrador ROZVI",
+            email="admin@rozvi.com",
+            telefono="3000000000",
+            hashed_password=obtener_hash_password("Admin123!"),
+            es_admin=True,
+        )
+        db.add(admin)
+        db.commit()
+    finally:
+        db.close()
 
 app.add_middleware(
     CORSMiddleware,
@@ -70,6 +113,8 @@ class Mensaje(BaseModel):
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+    seed_productos_iniciales()
+    seed_admin_user()
 
 
 @app.get("/")

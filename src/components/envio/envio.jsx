@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CarritoContext } from '../context/CarritoContext';
 import "./envio.css";
@@ -10,6 +10,36 @@ const Envio = () => {
     const [nombre, setNombre] = useState('');
     const [direccion, setDireccion] = useState('');
     const [telefono, setTelefono] = useState('');
+
+    const obtenerUsuarioDesdeStorage = () => {
+        const usuarioGuardado = localStorage.getItem('usuario');
+        if (!usuarioGuardado) return null;
+
+        try {
+            const usuario = JSON.parse(usuarioGuardado);
+            const candidatoId = usuario?.id ?? usuario?.usuario_id ?? usuario?.cliente_id ?? usuario?.userId;
+            const idNumerico = Number(candidatoId);
+            const idValido = Number.isInteger(idNumerico) && idNumerico > 0 ? idNumerico : null;
+
+            return {
+                id: idValido,
+                nombre: usuario?.nombre ?? usuario?.name ?? '',
+                telefono: usuario?.telefono ?? usuario?.phone ?? '',
+                direccion: usuario?.direccion_entrega ?? usuario?.direccion ?? '',
+            };
+        } catch {
+            return null;
+        }
+    };
+
+    useEffect(() => {
+        const usuarioSesion = obtenerUsuarioDesdeStorage();
+        if (!usuarioSesion) return;
+
+        setNombre((prev) => prev || usuarioSesion.nombre || '');
+        setTelefono((prev) => prev || usuarioSesion.telefono || '');
+        setDireccion((prev) => prev || usuarioSesion.direccion || '');
+    }, []);
 
     const manejarEnvio = async (e) => {
         e.preventDefault();
@@ -23,11 +53,17 @@ const Envio = () => {
             cantidad: item.cantidad
         }));
 
+        const usuarioSesion = obtenerUsuarioDesdeStorage();
+        const usuario_id = usuarioSesion?.id ?? null;
+        const nombreFinal = usuarioSesion?.nombre || nombre;
+        const telefonoFinal = telefono || usuarioSesion?.telefono || '';
+        const cliente_sombra = usuario_id ? null : nombreFinal;
+
         const datosPedido = {
-            usuario_id: null, // Cuenta Sombra
-            cliente_sombra: nombre,
+            usuario_id,
+            cliente_sombra,
             direccion_entrega: direccion,
-            telefono: telefono,
+            telefono: telefonoFinal,
             productos: productosParaBackend
         };
 
@@ -40,11 +76,12 @@ const Envio = () => {
 
             if (respuesta.ok) {
                 const resultado = await respuesta.json();
-                alert(`¡Gracias ${nombre}! Pedido #${resultado.id} recibido. 🥖`);
+                alert(`¡Gracias ${nombreFinal || 'cliente'}! Pedido #${resultado.id} recibido. 🥖`);
                 limpiarCarrito(); // Vacía el carrito
                 navigate("/");    // Vuelve al inicio
             } else {
-                alert("Error al procesar el pedido en el servidor.");
+                const data = await respuesta.json().catch(() => ({}));
+                alert(data.detail || "Error al procesar el pedido en el servidor.");
             }
         } catch (error) {
             console.error("Error:", error);

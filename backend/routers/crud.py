@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from security import obtener_hash_password
+from security import obtener_hash_password, verificar_password
 from database import get_session
 from dependencies import verify_secret_key
 
@@ -14,6 +14,7 @@ from .models import (
     pedidoCreate,
     PedidoRead,
     ClienteCreate,
+    ClienteLogin,
     ClienteRead,
 )
 from routers import models
@@ -54,11 +55,39 @@ def crear_usuario(payload: ClienteCreate, session: Session = Depends(get_session
         session.add(nuevo_usuario)
         session.commit()
         session.refresh(nuevo_usuario)
-        return nuevo_usuario
+        return {
+            "id": nuevo_usuario.id,
+            "nombre": nuevo_usuario.nombre,
+            "email": nuevo_usuario.email,
+            "telefono": nuevo_usuario.telefono,
+            "es_admin": nuevo_usuario.es_admin,
+        }
     except IntegrityError:
         session.rollback()
         raise HTTPException(status_code=400, detail="El correo ya esta registrado")
 
+
+@router.post("/clientes/login/", response_model=ClienteRead)
+def login_usuario(payload: ClienteLogin, session: Session = Depends(get_session)):
+    usuario = session.query(models.Cliente).filter(models.Cliente.email == payload.email).first()
+    if not usuario:
+        raise HTTPException(status_code=401, detail="Credenciales invalidas")
+
+    if not usuario.hashed_password or not verificar_password(payload.password, usuario.hashed_password):
+        raise HTTPException(status_code=401, detail="Credenciales invalidas")
+
+    return {
+        "id": usuario.id,
+        "nombre": usuario.nombre,
+        "email": usuario.email,
+        "telefono": usuario.telefono,
+        "es_admin": usuario.es_admin,
+    }
+
+@router.get("/clientes/")
+def leer_usuarios(session: Session = Depends(get_session)):
+    usuarios = session.query(models.Cliente).all()
+    return usuarios
 
 @router.post("/pedidos/", response_model=PedidoRead)
 def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session)):
@@ -135,6 +164,9 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
         
         return nuevo_pedido # Pydantic se encarga de formatear la respuesta
 
+    except HTTPException:
+        db.rollback() # Si algo falló, deshacemos todo para no dejar basura en la DB
+        raise
     except Exception as e:
         db.rollback() # Si algo falló, deshacemos todo para no dejar basura en la DB
         raise HTTPException(status_code=500, detail=f"Error en ROZVI: {str(e)}")

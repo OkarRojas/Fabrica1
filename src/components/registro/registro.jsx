@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./registro.css";
-import { useContext, useState } from "react";
+import { useState } from "react";
 
 const Registro = () => {
 
@@ -30,6 +30,8 @@ const Registro = () => {
                 body: JSON.stringify(formData)
             });
             if (respuesta.ok) {
+                const usuarioCreado = await respuesta.json();
+                localStorage.setItem('usuario', JSON.stringify(usuarioCreado));
                 alert("Registro exitoso. ¡Bienvenido a la familia Rozvi! 🥖");
                 navigate("/envio");
             } else {

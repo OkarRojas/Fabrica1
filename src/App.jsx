@@ -16,6 +16,8 @@ import Users from './components/users/users.jsx'
 import Envio from './components/envio/envio.jsx'
 import Checkout from './components/checkout/checkout.jsx'
 import Registro from './components/registro/registro.jsx'
+import Login from './components/login/login.jsx'
+import Pedidos from './components/pedidos/pedidos.jsx'
 
 function App() {
   return (
@@ -103,6 +105,28 @@ function App() {
             <>
               <Head />
               <Registro />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/login"
+          element={
+            <>
+              <Head />
+              <Login />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/pedidos"
+          element={
+            <>
+              <Head />
+              <Pedidos />
               <Footer />
             </>
           }

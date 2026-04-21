@@ -49,6 +49,7 @@ class Cliente(Base):
     email: Mapped[Optional[str]] = mapped_column(String(150), unique=True, nullable=True)
     hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     telefono: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    es_admin: Mapped[bool] = mapped_column(default=False)
     
     pedidos: Mapped[List["Pedido"]] = relationship(back_populates="cliente")
 
@@ -132,9 +133,15 @@ class ClienteCreate(BaseModel):
     password: str
 
 
+class ClienteLogin(BaseModel):
+    email: str
+    password: str
+
+
 class ClienteRead(BaseModel):
     id: int
     nombre: str
     email: Optional[str] = None
     telefono: Optional[str] = None
+    es_admin: bool = False
     model_config = ConfigDict(from_attributes=True)
