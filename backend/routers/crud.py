@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
 from security import obtener_hash_password, verificar_password
 from database import get_session
@@ -5,6 +6,13 @@ from dependencies import verify_secret_key
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+
+import mercadopago
+import os
+
+# En backend/routers/crud.py
+from security import obtener_hash_password # La función que hablamos antes
+
 
 from .models import (
     productos,
@@ -20,7 +28,8 @@ from .models import (
 from routers import models
 
 router = APIRouter()
-
+load_dotenv()  # Carga las variables de entorno desde el archivo .env
+sdk = mercadopago.SDK(os.getenv("MP_ACCESS_TOKEN"))
 
 @router.post("/productos/", response_model=productosRead, dependencies=[Depends(verify_secret_key)])
 def create_productos(payload: productosCreate, session: Session = Depends(get_session)):
@@ -162,7 +171,51 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
         db.commit() # Si todo salió bien, guardamos todo permanentemente
         db.refresh(nuevo_pedido)
         
-        return nuevo_pedido # Pydantic se encarga de formatear la respuesta
+        preference_data = {
+            "items": [
+                {
+                    "title": "Pedido ROZVI - Panadería",
+                    "quantity": 1,
+                    "unit_price": float(total), # Asegúrate de que sea float
+                    "currency_id": "COP"
+                }
+            ],
+            "back_urls": {
+                "success": "http://localhost:5173/pago-exitoso", # Ruta en tu React
+                "failure": "http://localhost:5173/pago-fallido",
+                "pending": "http://localhost:5173/pago-pendiente"
+            },
+            "auto_return": "approved",
+            "external_reference": str(nuevo_pedido.id) # Vinculamos el pago con el ID del pedido
+        }
+
+        # Generamos la preferencia en los servidores de Mercado Pago
+        preference_response = sdk.preference().create(preference_data)
+        preference = preference_response["response"]
+        
+        # El init_point es el link de la pasarela que usaremos en el frontend
+        link_de_pago = preference["init_point"]
+
+        # Devolvemos el objeto del pedido más el link de pago
+        # Nota: Asegúrate de que tu modelo 'PedidoRead' en models.py acepte el campo 'payment_link'
+        return {
+            "id": nuevo_pedido.id,
+            "usuario_id": nuevo_pedido.cliente_id,
+            "cliente_sombra": nuevo_pedido.cliente_sombra,
+            "fecha": nuevo_pedido.fecha,
+            "total": nuevo_pedido.total,
+            "estado": nuevo_pedido.estado,
+            "direccion_entrega": nuevo_pedido.direccion_entrega,
+            "telefono": nuevo_pedido.telefono,
+            "items": [
+                {
+                    "producto_id": item.producto_id,
+                    "cantidad": item.cantidad,
+                    "precio_unitario": item.precio_unitario
+                } for item in nuevo_pedido.items
+            ],
+            "payment_link": link_de_pago # <-- Este es el dato clave para React
+        } # Pydantic se encarga de formatear la respuesta
 
     except HTTPException:
         db.rollback() # Si algo falló, deshacemos todo para no dejar basura en la DB
@@ -238,3 +291,23 @@ def actualizar_stock_productos(productos_id: int, payload: productosUpdate, sess
     session.refresh(db_productos)
 
     return db_productos
+
+
+
+
+
+@router.post("/clientes/", response_model=ClienteRead)
+def crear_usuario(payload: ClienteCreate, session: Session = Depends(get_session)):
+    # 1. Generamos el hash de la contraseña que viene en el payload
+    hash_seguro = obtener_hash_password(payload.password)
+    
+    nuevo_usuario = models.Cliente(
+        nombre=payload.nombre,
+        email=payload.email,
+        telefono=payload.telefono,
+        hashed_password=hash_seguro # <-- Aquí guardamos la seguridad
+    )
+    session.add(nuevo_usuario)
+    session.commit()
+    session.refresh(nuevo_usuario)
+    return nuevo_usuario
