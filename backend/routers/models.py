@@ -117,7 +117,7 @@ class PedidoRead(BaseModel):
     telefono: Optional[str] = None
     items: List["DetallePedidoRead"]
     model_config = ConfigDict(from_attributes=True)
-    payment_url: Optional[str] = None  
+    payment_link: Optional[str] = None  
 
 
 class DetallePedidoRead(BaseModel):

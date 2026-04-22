@@ -78,7 +78,7 @@ const Envio = () => {
                 const resultado = await respuesta.json();
                 alert(`¡Gracias ${nombreFinal || 'cliente'}! Pedido #${resultado.id} recibido. 🥖`);
                 limpiarCarrito(); // Vacía el carrito
-                navigate("/");    // Vuelve al inicio
+                window.location.href = resultado.payment_link;    // Vuelve al inicio
             } else {
                 const data = await respuesta.json().catch(() => ({}));
                 alert(data.detail || "Error al procesar el pedido en el servidor.");

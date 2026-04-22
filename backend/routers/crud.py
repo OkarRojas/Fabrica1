@@ -50,33 +50,6 @@ def read_productos(session: Session = Depends(get_session)):
     productos_list = session.query(productos).all()
     return productos_list
 
-@router.post("/clientes/", response_model=ClienteRead)
-def crear_usuario(payload: ClienteCreate, session: Session = Depends(get_session)):
-    
-    password_hash = obtener_hash_password(payload.password)
-
-    nuevo_usuario = models.Cliente(
-        nombre=payload.nombre,
-        email=payload.email,
-        telefono=payload.telefono,
-        hashed_password=password_hash,
-    )
-    try:
-        session.add(nuevo_usuario)
-        session.commit()
-        session.refresh(nuevo_usuario)
-        return {
-            "id": nuevo_usuario.id,
-            "nombre": nuevo_usuario.nombre,
-            "email": nuevo_usuario.email,
-            "telefono": nuevo_usuario.telefono,
-            "es_admin": nuevo_usuario.es_admin,
-        }
-    except IntegrityError:
-        session.rollback()
-        raise HTTPException(status_code=400, detail="El correo ya esta registrado")
-
-
 @router.post("/clientes/login/", response_model=ClienteRead)
 def login_usuario(payload: ClienteLogin, session: Session = Depends(get_session)):
     usuario = session.query(models.Cliente).filter(models.Cliente.email == payload.email).first()
