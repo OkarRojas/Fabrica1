@@ -1,0 +1,147 @@
+import os
+import uuid
+from pathlib import Path
+from typing import Any
+
+import mercadopago
+from dotenv import load_dotenv
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, Field
+
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
+
+router = APIRouter()
+
+
+class ItemCheckout(BaseModel):
+    id: str
+    title: str
+    quantity: int = Field(gt=0)
+    unit_price: float = Field(gt=0)
+
+
+class CompradorCheckout(BaseModel):
+    nombre: str = Field(min_length=1)
+    email: str = Field(min_length=3)
+    telefono: str = Field(min_length=5)
+
+
+class PreferenciaRequest(BaseModel):
+    items: list[ItemCheckout]
+    comprador: CompradorCheckout
+
+
+@router.post("/crear-preferencia")
+def crear_preferencia(payload: PreferenciaRequest):
+    if not payload.items:
+        raise HTTPException(status_code=400, detail="Debes enviar al menos un item para pagar.")
+
+    if "@" not in payload.comprador.email:
+        raise HTTPException(status_code=400, detail="Debes enviar un email valido del comprador.")
+
+    mp_access_token = os.getenv("MP_ACCESS_TOKEN")
+    mp_public_key = os.getenv("MP_PUBLIC_KEY")
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+    backend_url = os.getenv("BACKEND_URL", "http://localhost:8000").rstrip("/")
+
+    missing_vars = []
+    if not mp_access_token:
+        missing_vars.append("MP_ACCESS_TOKEN")
+    if not mp_public_key:
+        missing_vars.append("MP_PUBLIC_KEY")
+
+    if missing_vars:
+        missing = ", ".join(missing_vars)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Faltan variables de entorno de Mercado Pago: {missing}.",
+        )
+
+    sdk = mercadopago.SDK(mp_access_token)
+
+    mp_items = [
+        {
+            "id": item.id,
+            "title": item.title,
+            "quantity": item.quantity,
+            "currency_id": "COP",
+            "unit_price": float(item.unit_price),
+        }
+        for item in payload.items
+    ]
+
+    telefono_limpio = "".join(ch for ch in payload.comprador.telefono if ch.isdigit())
+    payer_data: dict[str, Any] = {
+        "name": payload.comprador.nombre,
+        "email": payload.comprador.email,
+    }
+    if telefono_limpio:
+        payer_data["phone"] = {
+            "number": telefono_limpio,
+        }
+
+    preference_data: dict[str, Any] = {
+        "items": mp_items,
+        "payer": payer_data,
+        "back_urls": {
+            "success": f"{frontend_url}/checkout?status=success",
+            "failure": f"{frontend_url}/checkout?status=failure",
+            "pending": f"{frontend_url}/checkout?status=pending",
+        },
+        "notification_url": f"{backend_url}/pagos/webhook",
+        "external_reference": f"ROZVI-{uuid.uuid4()}",
+        "statement_descriptor": "ROZVI",
+    }
+
+    if not frontend_url.startswith("http://localhost") and not frontend_url.startswith("http://127.0.0.1"):
+        preference_data["auto_return"] = "approved"
+
+    request_options = mercadopago.config.RequestOptions()
+    request_options.custom_headers = {
+        "x-idempotency-key": str(uuid.uuid4()),
+    }
+
+    try:
+        preference_response = sdk.preference().create(preference_data, request_options)
+        response_status = preference_response.get("status")
+        preference = preference_response.get("response", {})
+        if not isinstance(preference, dict):
+            preference = {}
+
+        preference_id = preference.get("id")
+        if not preference_id:
+            mp_message = preference.get("message") or preference_response.get("message")
+            mp_cause = preference.get("cause") or preference_response.get("cause")
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "message": "Mercado Pago no devolvio un preference_id valido.",
+                    "mp_status": response_status,
+                    "mp_message": mp_message,
+                    "mp_cause": mp_cause,
+                    "mp_response": preference,
+                },
+            )
+
+        return {
+            "preference_id": preference_id,
+            "init_point": preference.get("init_point"),
+            "sandbox_init_point": preference.get("sandbox_init_point"),
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"No se pudo crear la preferencia de pago: {exc}",
+        )
+
+
+@router.post("/webhook")
+async def webhook(request: Request):
+    payload = await request.json()
+    return {
+        "ok": True,
+        "message": "Webhook recibido",
+        "payload": payload,
+    }

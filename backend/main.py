@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
@@ -11,14 +12,27 @@ from routers.models import Cliente as ClienteModel
 from database import create_db_and_tables, SessionLocal
 from database import get_session
 from routers import crud
+from routers import pagos
 from security import obtener_hash_password
 
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 secret_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=secret_key) if secret_key else None
 
 app = FastAPI()
+
+frontend_url = os.getenv("FRONTEND_URL")
+
+default_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+    "https://okarrojas.github.io",
+]
+if frontend_url:
+    default_origins.append(frontend_url)
 
 def obtener_contexto_productos(db: Session):
     productos_db = db.query(ProductoModel).all()
@@ -72,13 +86,7 @@ def seed_admin_user():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:4173",
-        "http://127.0.0.1:4173",
-        "https://okarrojas.github.io",
-    ],
+    allow_origins=default_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -153,3 +161,4 @@ async def chat(data: Mensaje, db: Session = Depends(get_session)):
 
 
 app.include_router(crud.router, prefix="/crud", tags=["crud"])
+app.include_router(pagos.router, prefix="/pagos", tags=["pagos"])

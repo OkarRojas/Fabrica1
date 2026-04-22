@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from security import obtener_hash_password, verificar_password
 from database import get_session
 from dependencies import verify_secret_key
+from sqlalchemy.sql import func
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -311,3 +312,53 @@ def crear_usuario(payload: ClienteCreate, session: Session = Depends(get_session
     session.commit()
     session.refresh(nuevo_usuario)
     return nuevo_usuario
+
+
+@router.get("/admin/stats", dependencies=[Depends(verify_secret_key)])
+def obtener_estadisticas(db: Session = Depends(get_session)):
+    total_pedidos = db.query(models.Pedido).count()
+    total_clientes = db.query(models.Cliente).count()
+    total_productos = db.query(models.productos).count()
+
+    productos_top_query=(
+        db.query(
+            models.productos.nombre,
+            func.sum(models.DetallePedido.cantidad).label("total_vendido")
+        )
+        .join(models.DetallePedido, models.productos.id == models.DetallePedido.producto_id)
+        .group_by(models.productos.id)
+        .order_by(func.sum(models.DetallePedido.cantidad).desc())
+        .limit(5)
+    )
+
+    alertas_stock_query = (
+        db.query(models.productos.id, models.productos.nombre, models.productos.stock)
+        .filter(models.productos.stock < 10)
+        .all()
+    )
+
+    productos_top = [
+        {
+            "id": p.id,
+            "nombre": p.nombre,
+            "total_vendido": p.total_vendido
+        }
+        for p in productos_top_query
+    ]
+
+    alertas_stock = [
+        {
+            "id": p.id,
+            "nombre": p.nombre,
+            "stock": p.stock
+        }
+        for p in alertas_stock_query
+    ]
+
+    return {
+        "total_pedidos": total_pedidos,
+        "total_clientes": total_clientes,
+        "total_productos": total_productos,
+        "productos_top": productos_top,
+        "alertas_stock": alertas_stock
+    }

@@ -97,7 +97,7 @@ const Carrito = () => {
               <span className="carrito-total-label">Total:</span>
               <span className="carrito-total-valor">${total}</span>
             </div>
-            <button className="carrito-btn-pedir" onClick={() => navigate("/users")}>
+            <button className="carrito-btn-pedir" onClick={() => navigate("/checkout")}>
               Pedir Ahora 🚀
             </button>
           </div>

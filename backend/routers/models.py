@@ -117,6 +117,7 @@ class PedidoRead(BaseModel):
     telefono: Optional[str] = None
     items: List["DetallePedidoRead"]
     model_config = ConfigDict(from_attributes=True)
+    payment_url: Optional[str] = None  
 
 
 class DetallePedidoRead(BaseModel):
@@ -145,3 +146,10 @@ class ClienteRead(BaseModel):
     telefono: Optional[str] = None
     es_admin: bool = False
     model_config = ConfigDict(from_attributes=True)
+
+
+class ClienteCreate(BaseModel):
+    nombre: str
+    email: Optional[str] = None
+    telefono: Optional[str] = None
+    password: str  
