@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 import mercadopago
 import os
+from urllib.parse import quote
 
 # En backend/routers/crud.py
 from security import obtener_hash_password # La función que hablamos antes
@@ -32,12 +33,13 @@ router = APIRouter()
 load_dotenv()  # Carga las variables de entorno desde el archivo .env
 sdk = mercadopago.SDK(os.getenv("MP_ACCESS_TOKEN"))
 
-@router.post("/productos/", response_model=productosRead, dependencies=[Depends(verify_secret_key)])
+@router.post("/productos/", response_model=productosRead)
 def create_productos(payload: productosCreate, session: Session = Depends(get_session)):
     db_productos = productos(
         nombre=payload.nombre,
         precio=payload.precio,
         stock=payload.stock,
+        descripcion=payload.descripcion,
     )
     session.add(db_productos)
     session.commit()
@@ -78,8 +80,14 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
     productos_a_actualizar = []
     
     try:
+        if not datos_pedido.productos:
+            raise HTTPException(status_code=400, detail="Debes enviar al menos un producto para crear el pedido.")
+
         # 1. Validación de stock y cálculo de total (tu lógica original)
         for item in datos_pedido.productos:
+            if item is None:
+                continue
+
             producto_id = item.get("producto_id") if isinstance(item, dict) else item.producto_id
             cantidad = item.get("cantidad") if isinstance(item, dict) else item.cantidad
             
@@ -163,12 +171,42 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
             "external_reference": str(nuevo_pedido.id) # Vinculamos el pago con el ID del pedido
         }
 
-        # Generamos la preferencia en los servidores de Mercado Pago
-        preference_response = sdk.preference().create(preference_data)
-        preference = preference_response["response"]
-        
-        # El init_point es el link de la pasarela que usaremos en el frontend
-        link_de_pago = preference["init_point"]
+        try:
+            # Generamos la preferencia en los servidores de Mercado Pago
+            preference_response = sdk.preference().create(preference_data)
+            preference = preference_response.get("response")
+
+            if preference is None:
+                print("[MercadoPago] Respuesta completa sin 'response':", preference_response)
+                raise HTTPException(
+                    status_code=500,
+                    detail={
+                        "message": "Mercado Pago no devolvio el campo 'response'.",
+                        "mp_response": preference_response,
+                    },
+                )
+
+            preference_id = preference.get("id")
+            if not preference_id:
+                print("[MercadoPago] No se encontro id de preferencia. Respuesta completa:", preference_response)
+                raise HTTPException(
+                    status_code=500,
+                    detail={
+                        "message": "Mercado Pago no devolvio el id de preferencia.",
+                        "mp_response": preference_response,
+                    },
+                )
+
+            # Construimos URL canónica de sandbox para evitar rutas /login con preference-id
+            link_de_pago = f"https://sandbox.mercadopago.com.co/checkout/v1/redirect?pref_id={quote(str(preference_id))}"
+        except HTTPException:
+            raise
+        except Exception as mp_error:
+            print("[MercadoPago] Error al crear preferencia:", mp_error)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error al crear preferencia en Mercado Pago: {mp_error}",
+            )
 
         # Devolvemos el objeto del pedido más el link de pago
         # Nota: Asegúrate de que tu modelo 'PedidoRead' en models.py acepte el campo 'payment_link'
@@ -250,7 +288,7 @@ def delete_productos(productos_id: int, session: Session = Depends(get_session))
     return {"detail": "Productos deleted successfully"}
 
 
-@router.patch("/productos/{productos_id}", response_model=productosRead, dependencies=[Depends(verify_secret_key)])
+@router.patch("/productos/{productos_id}", response_model=productosRead)
 def actualizar_stock_productos(productos_id: int, payload: productosUpdate, session: Session = Depends(get_session)):
     db_productos = session.get(productos, productos_id)
     if not db_productos:
@@ -287,14 +325,16 @@ def crear_usuario(payload: ClienteCreate, session: Session = Depends(get_session
     return nuevo_usuario
 
 
-@router.get("/admin/stats", dependencies=[Depends(verify_secret_key)])
+@router.get("/admin/stats/")
 def obtener_estadisticas(db: Session = Depends(get_session)):
     total_pedidos = db.query(models.Pedido).count()
     total_clientes = db.query(models.Cliente).count()
     total_productos = db.query(models.productos).count()
+    ingresos_totales = db.query(func.coalesce(func.sum(models.Pedido.total), 0)).scalar() or 0
 
     productos_top_query=(
         db.query(
+            models.productos.id,
             models.productos.nombre,
             func.sum(models.DetallePedido.cantidad).label("total_vendido")
         )
@@ -329,9 +369,103 @@ def obtener_estadisticas(db: Session = Depends(get_session)):
     ]
 
     return {
+        "ingresos_totales": float(ingresos_totales),
         "total_pedidos": total_pedidos,
         "total_clientes": total_clientes,
         "total_productos": total_productos,
         "productos_top": productos_top,
         "alertas_stock": alertas_stock
     }
+
+
+@router.post(
+    "/pedidos/prueba/sin-mp/",
+    response_model=PedidoRead,
+)
+def crear_pedido_prueba_sin_mp(datos_pedido: pedidoCreate, db: Session = Depends(get_session)):
+    total = 0
+    productos_a_actualizar = []
+
+    try:
+        if not datos_pedido.productos:
+            raise HTTPException(status_code=400, detail="Debes enviar al menos un producto para crear el pedido.")
+
+        for item in datos_pedido.productos:
+            if item is None:
+                continue
+
+            producto_id = item.get("producto_id") if isinstance(item, dict) else item.producto_id
+            cantidad = item.get("cantidad") if isinstance(item, dict) else item.cantidad
+
+            producto = db.query(models.productos).filter(models.productos.id == producto_id).first()
+            if not producto:
+                raise HTTPException(status_code=404, detail=f"Producto {producto_id} no existe")
+
+            if producto.stock >= cantidad:
+                producto.stock -= cantidad
+                db.add(producto)
+                total += cantidad * producto.precio
+                productos_a_actualizar.append((producto, cantidad))
+            else:
+                raise HTTPException(status_code=400, detail=f"No hay stock de {producto.nombre}")
+
+        id_final_cliente = datos_pedido.usuario_id
+        if id_final_cliente is None:
+            nuevo_usuario_sombra = models.Cliente(
+                nombre=datos_pedido.cliente_sombra or "Invitado ROZVI",
+                telefono=datos_pedido.telefono,
+                email=None,
+                hashed_password=None,
+            )
+            db.add(nuevo_usuario_sombra)
+            db.flush()
+            id_final_cliente = nuevo_usuario_sombra.id
+
+        nuevo_pedido = models.Pedido(
+            cliente_id=id_final_cliente,
+            total=total,
+            estado="Pagado",
+            direccion_entrega=datos_pedido.direccion_entrega,
+            telefono=datos_pedido.telefono,
+            cliente_sombra=datos_pedido.cliente_sombra,
+        )
+        db.add(nuevo_pedido)
+        db.flush()
+
+        for producto_obj, cantidad_pedida in productos_a_actualizar:
+            detalle = models.DetallePedido(
+                pedido_id=nuevo_pedido.id,
+                producto_id=producto_obj.id,
+                cantidad=cantidad_pedida,
+                precio_unitario=producto_obj.precio,
+            )
+            db.add(detalle)
+
+        db.commit()
+        db.refresh(nuevo_pedido)
+
+        return {
+            "id": nuevo_pedido.id,
+            "usuario_id": nuevo_pedido.cliente_id,
+            "cliente_sombra": nuevo_pedido.cliente_sombra,
+            "fecha": nuevo_pedido.fecha,
+            "total": nuevo_pedido.total,
+            "estado": nuevo_pedido.estado,
+            "direccion_entrega": nuevo_pedido.direccion_entrega,
+            "telefono": nuevo_pedido.telefono,
+            "items": [
+                {
+                    "producto_id": item.producto_id,
+                    "cantidad": item.cantidad,
+                    "precio_unitario": item.precio_unitario,
+                }
+                for item in nuevo_pedido.items
+            ],
+            "payment_link": None,
+        }
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creando pedido de prueba sin MP: {str(e)}")

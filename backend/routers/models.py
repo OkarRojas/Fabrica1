@@ -84,7 +84,7 @@ class productosbase(BaseModel):
     nombre: str
     precio: float
     stock: int
-    descripcion: str
+    descripcion: Optional[str] = None
 
 class productosCreate(productosbase):
     pass

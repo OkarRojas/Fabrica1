@@ -2,6 +2,7 @@ import os
 import uuid
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import mercadopago
 from dotenv import load_dotenv
@@ -123,10 +124,12 @@ def crear_preferencia(payload: PreferenciaRequest):
                 },
             )
 
+        sandbox_url = f"https://sandbox.mercadopago.com.co/checkout/v1/redirect?pref_id={quote(str(preference_id))}"
+
         return {
             "preference_id": preference_id,
             "init_point": preference.get("init_point"),
-            "sandbox_init_point": preference.get("sandbox_init_point"),
+            "sandbox_init_point": sandbox_url,
         }
     except HTTPException:
         raise

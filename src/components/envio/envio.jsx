@@ -11,6 +11,27 @@ const Envio = () => {
     const [direccion, setDireccion] = useState('');
     const [telefono, setTelefono] = useState('');
 
+    const construirLinkMercadoPago = (rawLink) => {
+        if (!rawLink) return '';
+
+        try {
+            const parsed = new URL(rawLink);
+            const hostValido = parsed.hostname.includes('mercadopago.com');
+            if (!hostValido) return '';
+
+            const prefId = parsed.searchParams.get('pref_id') || parsed.searchParams.get('preference-id');
+            if (!prefId) return parsed.toString();
+
+            if (parsed.hostname.includes('sandbox.mercadopago.com.co')) {
+                return `https://sandbox.mercadopago.com.co/checkout/v1/redirect?pref_id=${encodeURIComponent(prefId)}`;
+            }
+
+            return `https://www.mercadopago.com.co/checkout/v1/redirect?pref_id=${encodeURIComponent(prefId)}`;
+        } catch {
+            return '';
+        }
+    };
+
     const obtenerUsuarioDesdeStorage = () => {
         const usuarioGuardado = localStorage.getItem('usuario');
         if (!usuarioGuardado) return null;
@@ -48,10 +69,16 @@ const Envio = () => {
             return alert("No hay productos en tu pedido.");
         }
 
-        const productosParaBackend = items.map(item => ({
+        const productosParaBackend = items
+            .filter(item => item != null)
+            .map(item => ({
             producto_id: item.id,
             cantidad: item.cantidad
         }));
+
+        if (productosParaBackend.length === 0) {
+            return alert("No se pudieron procesar productos validos del carrito.");
+        }
 
         const usuarioSesion = obtenerUsuarioDesdeStorage();
         const usuario_id = usuarioSesion?.id ?? null;
@@ -78,14 +105,24 @@ const Envio = () => {
                 const resultado = await respuesta.json();
                 alert(`¡Gracias ${nombreFinal || 'cliente'}! Pedido #${resultado.id} recibido. 🥖`);
                 limpiarCarrito(); // Vacía el carrito
-                window.location.href = resultado.payment_link;    // Vuelve al inicio
+
+                if (resultado?.payment_link) {
+                    const linkSeguro = construirLinkMercadoPago(resultado.payment_link);
+                    if (!linkSeguro) {
+                        alert('El pedido fue creado, pero el link de Mercado Pago no es valido.');
+                        return;
+                    }
+                    window.location.assign(linkSeguro);
+                } else {
+                    alert("El pedido fue creado, pero no se recibio un link de pago valido.");
+                }
             } else {
                 const data = await respuesta.json().catch(() => ({}));
                 alert(data.detail || "Error al procesar el pedido en el servidor.");
             }
         } catch (error) {
             console.error("Error:", error);
-            alert("Error de conexión.");
+            alert("No se pudo conectar con el servidor. Verifica que el backend este encendido e intenta de nuevo.");
         }
     };
 

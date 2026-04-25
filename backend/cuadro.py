@@ -19,6 +19,8 @@ def posicion_cuadro(cuadro):
     return coords[0], coords[1]  # Retornar la posición (x, y)
 
 if __name__ == "__main__":
+    print("Iniciando aplicación de cuadro...")
+    print("hello world")
     root = tk.Tk()
 
     root.geometry("500x300")

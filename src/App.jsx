@@ -18,6 +18,7 @@ import Checkout from './components/checkout/checkout.jsx'
 import Registro from './components/registro/registro.jsx'
 import Login from './components/login/login.jsx'
 import Pedidos from './components/pedidos/pedidos.jsx'
+import AdminDashboard from './components/adminDashboard/adminDashboard.jsx'
 
 function App() {
   return (
@@ -126,6 +127,7 @@ function App() {
           element={
             <>
               <Head />
+              <AdminDashboard />
               <Pedidos />
               <Footer />
             </>

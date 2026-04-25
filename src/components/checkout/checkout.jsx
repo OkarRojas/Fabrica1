@@ -14,6 +14,31 @@ const Checkout = () => {
 
     const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+    const construirLinkMercadoPago = (rawLink, preferenceIdValue) => {
+        const fallback = preferenceIdValue
+            ? `https://sandbox.mercadopago.com.co/checkout/v1/redirect?pref_id=${encodeURIComponent(preferenceIdValue)}`
+            : "";
+
+        if (!rawLink) return fallback;
+
+        try {
+            const parsed = new URL(rawLink);
+            const hostValido = parsed.hostname.includes("mercadopago.com");
+            if (!hostValido) return fallback;
+
+            const prefId = parsed.searchParams.get("pref_id") || parsed.searchParams.get("preference-id") || preferenceIdValue;
+            if (!prefId) return parsed.toString();
+
+            if (parsed.hostname.includes("sandbox.mercadopago.com.co")) {
+                return `https://sandbox.mercadopago.com.co/checkout/v1/redirect?pref_id=${encodeURIComponent(prefId)}`;
+            }
+
+            return `https://www.mercadopago.com.co/checkout/v1/redirect?pref_id=${encodeURIComponent(prefId)}`;
+        } catch {
+            return fallback;
+        }
+    };
+
     const normalizarPrecio = (precio) => {
         if (typeof precio === "number") return precio;
         if (typeof precio !== "string") return 0;
@@ -82,7 +107,10 @@ const Checkout = () => {
             setSandboxInitPoint(data.sandbox_init_point || "");
             setMensaje("Abriendo Mercado Pago en una nueva pestaña...");
 
-            const destino = data.sandbox_init_point || data.init_point;
+            const destino = construirLinkMercadoPago(
+                data.sandbox_init_point || data.init_point || "",
+                data.preference_id,
+            );
             if (destino) {
                 window.location.assign(destino);
             } else {
