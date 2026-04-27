@@ -101,8 +101,6 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
                 raise HTTPException(status_code=404, detail=f"Producto {producto_id} no existe")
             
             if producto.stock >= cantidad:
-                producto.stock -= cantidad
-                db.add(producto)
                 total += cantidad * producto.precio
                 productos_a_actualizar.append((producto, cantidad))
             else:
@@ -144,7 +142,7 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
         db.add(nuevo_pedido)
         db.flush() # Obtenemos el ID del pedido para los detalles
 
-        # 4. Guardar los detalles (tu lógica original)
+        # 4. Guardar los detalles del pedido sin descontar stock; el webhook lo confirma al aprobarse el pago.
         for producto_obj, cantidad_pedida in productos_a_actualizar:
             detalle = models.DetallePedido(
                 pedido_id=nuevo_pedido.id,
@@ -331,7 +329,10 @@ def crear_usuario(payload: ClienteCreate, session: Session = Depends(get_session
 
 
 @router.get("/admin/stats/")
-def obtener_estadisticas(db: Session = Depends(get_session), admin: models.Cliente = Depends(obtener_admin_actual)):
+def obtener_estadisticas(
+    db: Session = Depends(get_session),
+    admin_user: models.Cliente = Depends(obtener_admin_actual),
+):
     total_pedidos = db.query(models.Pedido).count()
     total_clientes = db.query(models.Cliente).count()
     total_productos = db.query(models.productos).count()
@@ -512,7 +513,7 @@ async def mercadopago_webhook(request: Request, db: Session = Depends(get_sessio
                         if pedido_db.estado == "Pagado":
                             return {"status": "ok"}
 
-                        detalles_pedido = list(getattr(pedido_db, "detalles", None) or pedido_db.items)
+                        detalles_pedido = list(pedido_db.items)
                         actualizaciones_stock = []
 
                         # Validacion critica: si cualquier item no tiene stock suficiente, no se descuenta nada.

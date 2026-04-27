@@ -1,0 +1,130 @@
+.payment-status-page {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 4rem 1.25rem;
+  background:
+    radial-gradient(circle at top, rgba(243, 156, 18, 0.18), transparent 34%),
+    linear-gradient(180deg, #fffaf3 0%, #ffffff 100%);
+}
+
+.payment-status-card {
+  width: min(100%, 760px);
+  border-radius: 2rem;
+  padding: 2.25rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(163, 123, 54, 0.14);
+  box-shadow: 0 24px 60px rgba(89, 58, 17, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.payment-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.payment-status-badge::before {
+  content: '';
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.payment-status-card h1 {
+  margin: 1rem 0 0.75rem;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.05;
+  color: #2d1f12;
+}
+
+.payment-status-card p {
+  margin: 0;
+  max-width: 58ch;
+  color: #5c4a38;
+  font-size: 1.02rem;
+}
+
+.payment-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 1.75rem;
+}
+
+.payment-status-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.85rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.payment-status-link:hover {
+  transform: translateY(-1px);
+}
+
+.payment-status-link.primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, #8b5a18, #d08a2f);
+  box-shadow: 0 14px 28px rgba(208, 138, 47, 0.24);
+}
+
+.payment-status-link.secondary {
+  color: #5c4a38;
+  background: #fff3e2;
+  border-color: rgba(163, 123, 54, 0.18);
+}
+
+.payment-status-details {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 243, 226, 0.7);
+}
+
+.payment-status-details strong {
+  color: #2d1f12;
+}
+
+.payment-status-success .payment-status-badge {
+  color: #0b6b3a;
+  background: rgba(21, 128, 61, 0.12);
+}
+
+.payment-status-failure .payment-status-badge {
+  color: #b42318;
+  background: rgba(180, 35, 24, 0.12);
+}
+
+.payment-status-pending .payment-status-badge {
+  color: #8a5b00;
+  background: rgba(208, 138, 47, 0.16);
+}
+
+@media (max-width: 640px) {
+  .payment-status-card {
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+  }
+
+  .payment-status-actions {
+    flex-direction: column;
+  }
+
+  .payment-status-link {
+    width: 100%;
+  }
+}

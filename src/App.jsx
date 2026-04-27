@@ -19,6 +19,9 @@ import Registro from './components/registro/registro.jsx'
 import Login from './components/login/login.jsx'
 import Pedidos from './components/pedidos/pedidos.jsx'
 import AdminDashboard from './components/adminDashboard/adminDashboard.jsx'
+import PagoExitoso from './components/pagos/pagoExitoso.jsx'
+import PagoFallido from './components/pagos/pagoFallido.jsx'
+import PagoPendiente from './components/pagos/pagoPendiente.jsx'
 
 function App() {
   return (
@@ -96,6 +99,39 @@ function App() {
               <Checkout />
               <Footer />
               {/* Limpiamos las etiquetas mal cerradas que tenías aquí */}
+            </>
+          }
+        />
+
+        <Route
+          path="/pago-exitoso"
+          element={
+            <>
+              <Head />
+              <PagoExitoso />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/pago-fallido"
+          element={
+            <>
+              <Head />
+              <PagoFallido />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/pago-pendiente"
+          element={
+            <>
+              <Head />
+              <PagoPendiente />
+              <Footer />
             </>
           }
         />

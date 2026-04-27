@@ -85,9 +85,9 @@ def crear_preferencia(payload: PreferenciaRequest):
         "items": mp_items,
         "payer": payer_data,
         "back_urls": {
-            "success": f"{frontend_url}/checkout?status=success",
-            "failure": f"{frontend_url}/checkout?status=failure",
-            "pending": f"{frontend_url}/checkout?status=pending",
+            "success": f"{frontend_url}/pago-exitoso",
+            "failure": f"{frontend_url}/pago-fallido",
+            "pending": f"{frontend_url}/pago-pendiente",
         },
         "notification_url": f"{backend_url}/pagos/webhook",
         "external_reference": f"ROZVI-{uuid.uuid4()}",
