@@ -78,6 +78,22 @@
     border-bottom: 1px solid #eee;
 }
 
+.alerts-list li.stock-alert-critical {
+    background: #fff1f1;
+    border-left: 4px solid #c0392b;
+    padding-left: 0.75rem;
+}
+
+.stock-badge--zero {
+    background: #c0392b;
+    color: #fff;
+}
+
+.stock-alert-empty {
+    color: #777;
+    font-style: italic;
+}
+
 .stock-admin-section {
     margin-top: 2rem;
     background: white;

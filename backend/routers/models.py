@@ -148,8 +148,6 @@ class ClienteRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ClienteCreate(BaseModel):
-    nombre: str
-    email: Optional[str] = None
-    telefono: Optional[str] = None
-    password: str  
+class ClienteLoginResponse(ClienteRead):
+    access_token: str
+    token_type: str = "bearer"

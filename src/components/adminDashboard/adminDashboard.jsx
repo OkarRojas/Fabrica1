@@ -103,7 +103,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         const intervalId = setInterval(() => {
             sincronizarDatos(true);
-        }, 15000);
+        }, 30000);
 
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible') {
@@ -173,6 +173,8 @@ const AdminDashboard = () => {
 
     if (loading) return <div className="loading">Cargando métricas de ROZVI...</div>;
 
+    const alertasStock = (stats.alertas_stock || []).filter((producto) => Number(producto.stock) < 10);
+
     return (
         <div className="dashboard-container">
             <h1>Panel de Control - ROZVI 📊</h1>
@@ -227,7 +229,13 @@ const AdminDashboard = () => {
                             <XAxis dataKey="nombre" />
                             <YAxis />
                             <Tooltip />
-                            <Bar dataKey="total_vendido" fill="#d35400">
+                            <Bar
+                                dataKey="total_vendido"
+                                fill="#d35400"
+                                isAnimationActive
+                                animationDuration={800}
+                                animationEasing="ease-out"
+                            >
                                 {(stats.productos_top || []).map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={index === 0 ? '#e67e22' : '#d35400'} />
                                 ))}
@@ -240,12 +248,23 @@ const AdminDashboard = () => {
                 <div className="alerts-list">
                     <h3>⚠️ Reposición Urgente</h3>
                     <ul>
-                        {(stats.alertas_stock || []).map(prod => (
-                            <li key={prod.id}>
-                                <span>{prod.nombre}</span>
-                                <span className="stock-badge">Quedan: {prod.stock}</span>
+                        {alertasStock.map((prod) => {
+                            const stockCero = Number(prod.stock) === 0;
+
+                            return (
+                                <li key={prod.id} className={stockCero ? 'stock-alert-critical' : ''}>
+                                    <span>{prod.nombre}</span>
+                                    <span className={`stock-badge ${stockCero ? 'stock-badge--zero' : ''}`}>
+                                        Quedan: {prod.stock}
+                                    </span>
+                                </li>
+                            );
+                        })}
+                        {alertasStock.length === 0 && (
+                            <li className="stock-alert-empty">
+                                <span>No hay alertas de stock activas.</span>
                             </li>
-                        ))}
+                        )}
                     </ul>
                 </div>
             </div>

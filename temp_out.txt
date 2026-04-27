@@ -1,0 +1,5 @@
+POST /crud/clientes/login/: status=200, has_token=True
+Login JSON: {'id': 19, 'nombre': 'Administrador ROZVI', 'email': 'admin@rozvi.com', 'telefono': '3000000000', 'es_admin': True, 'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkByb3p2aS5jb20iLCJlc19hZG1pbiI6dHJ1ZSwiZXhwIjoxNzc3MjQxMDAyfQ.rCpFuu1chP2dm4UZoRRx1q9goSW00Ii-wB_niOqVBI8', 'token_type': 'bearer'}
+GET /crud/admin/stats/ (no auth): status=401
+GET /crud/admin/stats/ (with auth): status=401
+Auth response body: {'detail': 'Credenciales inválidas o expiradas'}

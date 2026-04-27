@@ -1,0 +1,4 @@
+POST /crud/clientes/login/: status=200
+GET /crud/admin/stats/ (no auth): status=401
+  Body: {'detail': 'Not authenticated'}
+GET /crud/admin/stats/ (with auth): status=200

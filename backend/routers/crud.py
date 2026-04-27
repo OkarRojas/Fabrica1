@@ -1,19 +1,17 @@
 from dotenv import load_dotenv
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from security import obtener_hash_password, verificar_password
 from database import get_session
 from dependencies import verify_secret_key
 from sqlalchemy.sql import func
 
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 import mercadopago
 import os
 from urllib.parse import quote
-
-# En backend/routers/crud.py
-from security import obtener_hash_password # La función que hablamos antes
+import security
+from dependencies import obtener_admin_actual
 
 
 from .models import (
@@ -26,6 +24,7 @@ from .models import (
     ClienteCreate,
     ClienteLogin,
     ClienteRead,
+    ClienteLoginResponse,
 )
 from routers import models
 
@@ -52,7 +51,7 @@ def read_productos(session: Session = Depends(get_session)):
     productos_list = session.query(productos).all()
     return productos_list
 
-@router.post("/clientes/login/", response_model=ClienteRead)
+@router.post("/clientes/login/", response_model=ClienteLoginResponse)
 def login_usuario(payload: ClienteLogin, session: Session = Depends(get_session)):
     usuario = session.query(models.Cliente).filter(models.Cliente.email == payload.email).first()
     if not usuario:
@@ -61,12 +60,18 @@ def login_usuario(payload: ClienteLogin, session: Session = Depends(get_session)
     if not usuario.hashed_password or not verificar_password(payload.password, usuario.hashed_password):
         raise HTTPException(status_code=401, detail="Credenciales invalidas")
 
+    token_acceso = security.crear_token_acceso(
+        data={"sub": usuario.email, "es_admin": usuario.es_admin}
+    )
+
     return {
         "id": usuario.id,
         "nombre": usuario.nombre,
         "email": usuario.email,
         "telefono": usuario.telefono,
         "es_admin": usuario.es_admin,
+        "access_token": token_acceso,
+        "token_type": "bearer",
     }
 
 @router.get("/clientes/")
@@ -288,7 +293,7 @@ def delete_productos(productos_id: int, session: Session = Depends(get_session))
     return {"detail": "Productos deleted successfully"}
 
 
-@router.patch("/productos/{productos_id}", response_model=productosRead)
+@router.patch("/productos/{productos_id}", response_model=productosRead, dependencies=[Depends(verify_secret_key)])
 def actualizar_stock_productos(productos_id: int, payload: productosUpdate, session: Session = Depends(get_session)):
     db_productos = session.get(productos, productos_id)
     if not db_productos:
@@ -326,7 +331,7 @@ def crear_usuario(payload: ClienteCreate, session: Session = Depends(get_session
 
 
 @router.get("/admin/stats/")
-def obtener_estadisticas(db: Session = Depends(get_session)):
+def obtener_estadisticas(db: Session = Depends(get_session), admin: models.Cliente = Depends(obtener_admin_actual)):
     total_pedidos = db.query(models.Pedido).count()
     total_clientes = db.query(models.Cliente).count()
     total_productos = db.query(models.productos).count()
@@ -469,3 +474,84 @@ def crear_pedido_prueba_sin_mp(datos_pedido: pedidoCreate, db: Session = Depends
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creando pedido de prueba sin MP: {str(e)}")
+
+
+@router.post("/webhook")
+async def mercadopago_webhook(request: Request, db: Session = Depends(get_session)):
+    # Capturar los datos enviados por la pasarela
+    datos = await request.json()
+    
+    # Identificar el tipo de evento
+    tema = request.query_params.get("topic") or datos.get("type")
+    
+    if tema in ["payment", "payment.created", "payment.updated"]:
+        pago_id = datos.get("data", {}).get("id")
+        
+        if pago_id:
+            # Paso A: Consultar el estado real del pago a la API oficial
+            respuesta_pago = sdk.payment().get(pago_id)
+            info_pago = respuesta_pago.get("response")
+            
+            if info_pago and info_pago.get("status") == "approved":
+                # Paso B: Extraer el ID del pedido asociado
+                pedido_id_str = info_pago.get("external_reference")
+                
+                if pedido_id_str:
+                    try:
+                        pedido_id = int(pedido_id_str)
+                    except ValueError:
+                        print(f"[Webhook MP] external_reference invalido: {pedido_id_str}")
+                        return {"status": "ok"}
+
+                    try:
+                        pedido_db = db.query(models.Pedido).filter(models.Pedido.id == pedido_id).first()
+                        if not pedido_db:
+                            print(f"[Webhook MP] Pedido no encontrado: {pedido_id}")
+                            return {"status": "ok"}
+
+                        if pedido_db.estado == "Pagado":
+                            return {"status": "ok"}
+
+                        detalles_pedido = list(getattr(pedido_db, "detalles", None) or pedido_db.items)
+                        actualizaciones_stock = []
+
+                        # Validacion critica: si cualquier item no tiene stock suficiente, no se descuenta nada.
+                        for detalle in detalles_pedido:
+                            producto_db = (
+                                db.query(models.productos)
+                                .filter(models.productos.id == detalle.producto_id)
+                                .first()
+                            )
+
+                            if not producto_db:
+                                print(
+                                    f"[Webhook MP] Producto no encontrado para pedido {pedido_id}: "
+                                    f"producto_id={detalle.producto_id}"
+                                )
+                                db.rollback()
+                                return {"status": "ok"}
+
+                            if producto_db.stock < detalle.cantidad:
+                                print(
+                                    f"[Webhook MP] Stock insuficiente para pedido {pedido_id}: "
+                                    f"producto_id={producto_db.id}, stock_actual={producto_db.stock}, "
+                                    f"cantidad_solicitada={detalle.cantidad}"
+                                )
+                                db.rollback()
+                                return {"status": "ok"}
+
+                            actualizaciones_stock.append((producto_db, detalle.cantidad))
+
+                        for producto_db, cantidad_comprada in actualizaciones_stock:
+                            producto_db.stock -= cantidad_comprada
+                            db.add(producto_db)
+
+                        pedido_db.estado = "Pagado"
+                        db.add(pedido_db)
+                        db.commit()
+                    except Exception as error:
+                        db.rollback()
+                        print(f"[Webhook MP] Error procesando inventario del pedido {pedido_id}: {error}")
+                        
+    # Obligatorio: Responder siempre HTTP 200 OK para evitar reintentos infinitos
+    return {"status": "ok"}
