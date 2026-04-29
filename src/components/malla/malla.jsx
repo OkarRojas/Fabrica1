@@ -22,6 +22,7 @@ const productosLocales = [
 ];
 
 const Malla = () => {
+  const backend_url = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [categorias, setCategorias] = useState([]);
@@ -33,7 +34,7 @@ const Malla = () => {
     // La función que hace el "viaje" al backend
     const obtenerDatos = async () => {
       try {
-        const respuesta = await fetch("http://localhost:8000/crud/productos/");
+        const respuesta = await fetch(`${backend_url}/crud/productos/`);
         const datos = await respuesta.json();
         // Acepta respuesta como arreglo directo o dentro de una propiedad "data"
 

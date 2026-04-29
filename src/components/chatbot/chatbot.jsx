@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import "./chatbot.css";
 
 const ChatBot = () => {
+  const backend_url = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
   const [abierto, setAbierto] = useState(false);
   const [historial, setHistorial] = useState([
     { role: "assistant", content: "¡Hola! Soy Rozvi 🍞 ¿En qué te puedo ayudar hoy?" }
@@ -24,7 +25,7 @@ const ChatBot = () => {
     setCargando(true);
 
     try {
-      const res = await fetch("http://localhost:8000/chat", {
+      const res = await fetch(`${backend_url}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

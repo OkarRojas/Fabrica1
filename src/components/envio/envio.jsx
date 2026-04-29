@@ -6,7 +6,7 @@ import "./envio.css";
 const Envio = () => {
     const { items, total, limpiarCarrito } = useContext(CarritoContext);
     const navigate = useNavigate();
-
+    const backend_url = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
     const [nombre, setNombre] = useState('');
     const [direccion, setDireccion] = useState('');
     const [telefono, setTelefono] = useState('');
@@ -95,7 +95,7 @@ const Envio = () => {
         };
 
         try {
-            const respuesta = await fetch('http://localhost:8000/crud/pedidos/', {
+            const respuesta = await fetch(`${backend_url}/crud/pedidos/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datosPedido)

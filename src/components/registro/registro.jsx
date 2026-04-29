@@ -5,6 +5,7 @@ import { useState } from "react";
 
 const Registro = () => {
 
+    const backend_url = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         nombre: "",
@@ -24,7 +25,7 @@ const Registro = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const respuesta = await fetch('http://localhost:8000/crud/clientes/', {
+            const respuesta = await fetch(`${backend_url}/crud/clientes/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

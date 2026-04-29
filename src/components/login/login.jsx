@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./login.css";
 
 const Login = () => {
+    const backend_url = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
     const navigate = useNavigate();
     const location = useLocation();
     const rutaOrigen = location.state?.from || "/";
@@ -23,7 +24,7 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const respuesta = await fetch("http://localhost:8000/crud/clientes/login/", {
+            const respuesta = await fetch(`${backend_url}/crud/clientes/login/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

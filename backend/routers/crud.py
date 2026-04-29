@@ -31,6 +31,7 @@ from routers import models
 router = APIRouter()
 load_dotenv()  # Carga las variables de entorno desde el archivo .env
 sdk = mercadopago.SDK(os.getenv("MP_ACCESS_TOKEN"))
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 @router.post("/productos/", response_model=productosRead)
 def create_productos(payload: productosCreate, session: Session = Depends(get_session)):
@@ -166,9 +167,9 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
                 }
             ],
             "back_urls": {
-                "success": "http://localhost:5173/pago-exitoso", # Ruta en tu React
-                "failure": "http://localhost:5173/pago-fallido",
-                "pending": "http://localhost:5173/pago-pendiente"
+                "success": f"{FRONTEND_URL}/pago-exitoso", # Ruta en tu React
+                "failure": f"{FRONTEND_URL}/pago-fallido",
+                "pending": f"{FRONTEND_URL}/pago-pendiente"
             },
             "auto_return": "approved",
             "external_reference": str(nuevo_pedido.id) # Vinculamos el pago con el ID del pedido
