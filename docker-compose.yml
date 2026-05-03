@@ -1,6 +1,7 @@
 services:
-  # El motor de tu panadería (Python)
+  # El motor de tu panadería (Python/FastAPI)
   backend:
+    restart: on-failure
     build: ./backend
     ports:
       - "8000:8000"
@@ -8,15 +9,34 @@ services:
       - ./backend/.env
     volumes:
       - ./backend:/app
+    depends_on:
+      - db  # Espera a que la base de datos arranque
 
   # La vitrina de tu panadería (React)
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.frontend # Crearemos este en el siguiente paso
+      dockerfile: Dockerfile.frontend
     ports:
       - "5173:5173"
     env_file:
       - .env
     depends_on:
       - backend
+
+  # EL NUEVO INTEGRANTE: La bodega de datos (PostgreSQL)
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-usuario_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password_secreto}
+      POSTGRES_DB: ${POSTGRES_DB:-rozvi_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # <--- El "túnel" de persistencia
+
+# DEFINICIÓN GLOBAL DE VOLÚMENES (Esto va al final del archivo)
+volumes:
+  postgres_data: # <--- Aquí se crea el "Silo" permanente en tu disco duro
