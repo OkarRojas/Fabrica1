@@ -12,6 +12,7 @@ import os
 from urllib.parse import quote
 import security
 from dependencies import obtener_admin_actual
+from .webhooks_mp import procesar_webhook_mercadopago
 
 
 from .models import (
@@ -32,6 +33,7 @@ router = APIRouter()
 load_dotenv()  # Carga las variables de entorno desde el archivo .env
 sdk = mercadopago.SDK(os.getenv("MP_ACCESS_TOKEN"))
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000").rstrip("/")
 
 @router.post("/productos/", response_model=productosRead)
 def create_productos(payload: productosCreate, session: Session = Depends(get_session)):
@@ -172,7 +174,11 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
                 "pending": f"{FRONTEND_URL}/pago-pendiente"
             },
             "auto_return": "approved",
-            "external_reference": str(nuevo_pedido.id) # Vinculamos el pago con el ID del pedido
+            "notification_url": f"{BACKEND_URL}/pagos/webhook",
+            "external_reference": str(nuevo_pedido.id), # Vinculamos el pago con el ID del pedido
+            "metadata": {
+                "pedido_id": nuevo_pedido.id,
+            },
         }
 
         try:
@@ -480,80 +486,4 @@ def crear_pedido_prueba_sin_mp(datos_pedido: pedidoCreate, db: Session = Depends
 
 @router.post("/webhook")
 async def mercadopago_webhook(request: Request, db: Session = Depends(get_session)):
-    # Capturar los datos enviados por la pasarela
-    datos = await request.json()
-    
-    # Identificar el tipo de evento
-    tema = request.query_params.get("topic") or datos.get("type")
-    
-    if tema in ["payment", "payment.created", "payment.updated"]:
-        pago_id = datos.get("data", {}).get("id")
-        
-        if pago_id:
-            # Paso A: Consultar el estado real del pago a la API oficial
-            respuesta_pago = sdk.payment().get(pago_id)
-            info_pago = respuesta_pago.get("response")
-            
-            if info_pago and info_pago.get("status") == "approved":
-                # Paso B: Extraer el ID del pedido asociado
-                pedido_id_str = info_pago.get("external_reference")
-                
-                if pedido_id_str:
-                    try:
-                        pedido_id = int(pedido_id_str)
-                    except ValueError:
-                        print(f"[Webhook MP] external_reference invalido: {pedido_id_str}")
-                        return {"status": "ok"}
-
-                    try:
-                        pedido_db = db.query(models.Pedido).filter(models.Pedido.id == pedido_id).first()
-                        if not pedido_db:
-                            print(f"[Webhook MP] Pedido no encontrado: {pedido_id}")
-                            return {"status": "ok"}
-
-                        if pedido_db.estado == "Pagado":
-                            return {"status": "ok"}
-
-                        detalles_pedido = list(pedido_db.items)
-                        actualizaciones_stock = []
-
-                        # Validacion critica: si cualquier item no tiene stock suficiente, no se descuenta nada.
-                        for detalle in detalles_pedido:
-                            producto_db = (
-                                db.query(models.productos)
-                                .filter(models.productos.id == detalle.producto_id)
-                                .first()
-                            )
-
-                            if not producto_db:
-                                print(
-                                    f"[Webhook MP] Producto no encontrado para pedido {pedido_id}: "
-                                    f"producto_id={detalle.producto_id}"
-                                )
-                                db.rollback()
-                                return {"status": "ok"}
-
-                            if producto_db.stock < detalle.cantidad:
-                                print(
-                                    f"[Webhook MP] Stock insuficiente para pedido {pedido_id}: "
-                                    f"producto_id={producto_db.id}, stock_actual={producto_db.stock}, "
-                                    f"cantidad_solicitada={detalle.cantidad}"
-                                )
-                                db.rollback()
-                                return {"status": "ok"}
-
-                            actualizaciones_stock.append((producto_db, detalle.cantidad))
-
-                        for producto_db, cantidad_comprada in actualizaciones_stock:
-                            producto_db.stock -= cantidad_comprada
-                            db.add(producto_db)
-
-                        pedido_db.estado = "Pagado"
-                        db.add(pedido_db)
-                        db.commit()
-                    except Exception as error:
-                        db.rollback()
-                        print(f"[Webhook MP] Error procesando inventario del pedido {pedido_id}: {error}")
-                        
-    # Obligatorio: Responder siempre HTTP 200 OK para evitar reintentos infinitos
-    return {"status": "ok"}
+    return await procesar_webhook_mercadopago(request, db, sdk)

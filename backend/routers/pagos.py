@@ -6,12 +6,17 @@ from urllib.parse import quote
 
 import mercadopago
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from database import get_session
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from .webhooks_mp import procesar_webhook_mercadopago
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 
 router = APIRouter()
+sdk = mercadopago.SDK(os.getenv("MP_ACCESS_TOKEN"))
 
 
 class ItemCheckout(BaseModel):
@@ -30,6 +35,7 @@ class CompradorCheckout(BaseModel):
 class PreferenciaRequest(BaseModel):
     items: list[ItemCheckout]
     comprador: CompradorCheckout
+    pedido_id: int | None = None
 
 
 @router.post("/crear-preferencia")
@@ -90,9 +96,14 @@ def crear_preferencia(payload: PreferenciaRequest):
             "pending": f"{frontend_url}/pago-pendiente",
         },
         "notification_url": f"{backend_url}/pagos/webhook",
-        "external_reference": f"ROZVI-{uuid.uuid4()}",
         "statement_descriptor": "ROZVI",
     }
+
+    if payload.pedido_id is not None:
+        preference_data["external_reference"] = str(payload.pedido_id)
+        preference_data["metadata"] = {"pedido_id": payload.pedido_id}
+    else:
+        preference_data["external_reference"] = f"ROZVI-{uuid.uuid4()}"
 
     if not frontend_url.startswith("http://localhost") and not frontend_url.startswith("http://127.0.0.1"):
         preference_data["auto_return"] = "approved"
@@ -141,10 +152,5 @@ def crear_preferencia(payload: PreferenciaRequest):
 
 
 @router.post("/webhook")
-async def webhook(request: Request):
-    payload = await request.json()
-    return {
-        "ok": True,
-        "message": "Webhook recibido",
-        "payload": payload,
-    }
+async def webhook(request: Request, db: Session = Depends(get_session)):
+    return await procesar_webhook_mercadopago(request, db, sdk)
