@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Wallet } from "@mercadopago/sdk-react";
 import { useCarrito } from "../context/CarritoContext";
 import "./checkout.css";
 
 const Checkout = () => {
     const { items, total } = useCarrito();
+    const [searchParams] = useSearchParams();
     const [comprador, setComprador] = useState({ nombre: "", email: "", telefono: "" });
     const [loading, setLoading] = useState(false);
     const [preferenceId, setPreferenceId] = useState("");
@@ -13,6 +15,11 @@ const Checkout = () => {
     const [mensaje, setMensaje] = useState("");
 
     const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const pedidoId = useMemo(() => {
+        const valor = searchParams.get("pedido_id") || searchParams.get("pedidoId") || searchParams.get("order_id");
+        const numero = Number(valor);
+        return Number.isInteger(numero) && numero > 0 ? numero : null;
+    }, [searchParams]);
 
     const construirLinkMercadoPago = (rawLink, preferenceIdValue) => {
         const fallback = preferenceIdValue
@@ -89,6 +96,7 @@ const Checkout = () => {
                 body: JSON.stringify({
                     items: itemsNormalizados,
                     comprador,
+                    pedido_id: pedidoId,
                 }),
             });
 

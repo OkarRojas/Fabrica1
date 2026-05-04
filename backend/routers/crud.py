@@ -169,9 +169,9 @@ def crear_pedido(datos_pedido: pedidoCreate, db: Session = Depends(get_session))
                 }
             ],
             "back_urls": {
-                "success": f"{FRONTEND_URL}/pago-exitoso", # Ruta en tu React
-                "failure": f"{FRONTEND_URL}/pago-fallido",
-                "pending": f"{FRONTEND_URL}/pago-pendiente"
+                "success": f"{FRONTEND_URL}/success", # Ruta en tu React
+                "failure": f"{FRONTEND_URL}/failure",
+                "pending": f"{FRONTEND_URL}/pending"
             },
             "auto_return": "approved",
             "notification_url": f"{BACKEND_URL}/pagos/webhook",

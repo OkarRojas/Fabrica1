@@ -115,6 +115,17 @@ function App() {
         />
 
         <Route
+          path="/success"
+          element={
+            <>
+              <Head />
+              <PagoExitoso />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
           path="/pago-fallido"
           element={
             <>
@@ -126,7 +137,29 @@ function App() {
         />
 
         <Route
+          path="/failure"
+          element={
+            <>
+              <Head />
+              <PagoFallido />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
           path="/pago-pendiente"
+          element={
+            <>
+              <Head />
+              <PagoPendiente />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/pending"
           element={
             <>
               <Head />
